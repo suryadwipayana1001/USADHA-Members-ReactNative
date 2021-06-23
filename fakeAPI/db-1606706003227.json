@@ -1,0 +1,90 @@
+{
+  "users": [
+    {
+      "namaLengkap": "b3st",
+      "password": "Cxzdsaewq321",
+      "selected": false,
+      "confirmPassword": "B3st@gmail.com",
+      "email": "br.gegaran mengwi",
+      "phone": "082235265302",
+      "alamat": "Tabanan",
+      "namaBank": "Bank BRI",
+      "namaPemilik": "B3ST",
+      "nomorBank": "455124555451",
+      "id": 1
+    },
+    {
+      "namaLengkap": "fajar",
+      "password": "27101998",
+      "selected": false,
+      "confirmPassword": "27101998",
+      "email": "fajarprayoga23@gmail.com",
+      "phone": "082235265301",
+      "alamat": "br mengwi badung",
+      "namaBank": "BRI",
+      "namaPemilik": "fajar",
+      "nomorBank": "023584",
+      "id": 2
+    },
+    {
+      "namaLengkap": "mei",
+      "password": "27101998",
+      "confirmPassword": "27101998",
+      "email": "mei@gmail.com",
+      "phone": "085235265301",
+      "alamat": "tabanan",
+      "namaBank": "BRI",
+      "namaPemilik": "Kadek Mei",
+      "nomorBank": "025855665",
+      "id": 3
+    }
+  ],
+  "product": [
+    {
+      "namaProduct": "minyak belog",
+      "harga": 700000,
+      "berat": 100,
+      "kondisi": "Baru",
+      "kategori": "minyak",
+      "deskripsi": "minyak yang bagus untuk menjaga kesehatan",
+      "id": 1
+    },
+    {
+      "namaProduct": "minyak belog 2",
+      "harga": 500000,
+      "berat": 102,
+      "kondisi": "Baru",
+      "kategori": "minyak",
+      "deskripsi": "minyak yang bagus untuk menjaga kesehatan",
+      "id": 2
+    }
+  ],
+  "agen": [
+    {
+      "nama": "Fajar",
+      "harga": 700000,
+      "jarak": "2000 km",
+      "ongkir": 20000,
+      "phone": "08225265301",
+      "id": 1
+    },
+    {
+      "nama": "B3st",
+      "harga": 800000,
+      "jarak": "1000 km",
+      "ongkir": 10000,
+      "phone": "08225152515",
+      "id": 2
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "some comment",
+      "postId": 1
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  }
+}

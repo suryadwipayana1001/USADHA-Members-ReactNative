@@ -1,0 +1,240 @@
+{
+  "users": [
+    {
+      "namaLengkap": "b3st ss",
+      "password": "Cxzdsaewq321",
+      "selected": false,
+      "confirmPassword": "B3st@gmail.com",
+      "email": "br.gegaran mengwi",
+      "phone": "082235265302",
+      "alamat": "Tabanan",
+      "namaBank": "Bank BRI",
+      "namaPemilik": "B3ST",
+      "nomorBank": "455124555451",
+      "point": 15000,
+      "id": 1
+    },
+    {
+      "id": 2,
+      "namaLengkap": "fajarw",
+      "password": "27101998",
+      "confirmPassword": "27101998",
+      "email": "fajarprayoga23@gmail.com",
+      "phone": "082235265301",
+      "alamat": "br mengwi badung",
+      "namaBank": "BRI",
+      "namaPemilik": "fajar",
+      "nomorBank": "023584",
+      "point": 50000
+    },
+    {
+      "namaLengkap": "mei",
+      "password": "27101998",
+      "confirmPassword": "27101998",
+      "email": "mei@gmail.com",
+      "phone": "085235265301",
+      "alamat": "tabanan",
+      "namaBank": "BRI",
+      "namaPemilik": "Kadek Mei",
+      "nomorBank": "025855665",
+      "point": 15000,
+      "id": 3
+    },
+    {
+      "namaLengkap": "admin",
+      "password": "admin",
+      "confirmPassword": "admin",
+      "email": "fajarprayoga23@gmail.com",
+      "phone": "123456789",
+      "alamat": "mengwi",
+      "namaBank": "admin",
+      "namaPemilik": "admin",
+      "nomorBank": "admin",
+      "point": 435000,
+      "id": 4
+    },
+    {
+      "namaLengkap": "admin123",
+      "password": "27101998",
+      "confirmPassword": "27101998",
+      "email": "fajarprayoga23@gmail.com",
+      "phone": "00000000",
+      "alamat": "mengwi",
+      "namaBank": "BRI",
+      "namaPemilik": "admin123",
+      "nomorBank": "Admin234",
+      "point": 0,
+      "id": 5
+    },
+    {
+      "namaLengkap": "xxx",
+      "password": "xxxxxx",
+      "confirmPassword": "xxxxxx",
+      "email": "fajarprayoga23@gmail.com",
+      "phone": "11111111",
+      "alamat": "hfjvjvjvjvjvj",
+      "namaBank": "sdsd",
+      "namaPemilik": "dsssd",
+      "nomorBank": "551512121",
+      "point": 0,
+      "id": 6
+    },
+    {
+      "namaLengkap": "aaa",
+      "password": "aaaaa",
+      "confirmPassword": "aaaaa",
+      "email": "aaa@gmail.com",
+      "phone": "22222222",
+      "alamat": "mengwi baha",
+      "namaBank": "aaa",
+      "namaPemilik": "aaa",
+      "nomorBank": "11111",
+      "point": 0,
+      "id": 7
+    },
+    {
+      "namaLengkap": "ddd",
+      "password": "ddd",
+      "confirmPassword": "ddd",
+      "email": "ddd@gmial.com",
+      "phone": "33333333",
+      "alamat": "vsvvs",
+      "namaBank": "sdsd",
+      "namaPemilik": "sdsds",
+      "nomorBank": "5645454545",
+      "point": 0,
+      "id": 8
+    },
+    {
+      "namaLengkap": "fff",
+      "password": "fff",
+      "confirmPassword": "fff",
+      "email": "fff@gmail.com",
+      "phone": "55555555",
+      "alamat": "sssajsnjas",
+      "namaBank": "fff",
+      "namaPemilik": "fff",
+      "nomorBank": "55555555",
+      "point": 0,
+      "id": 9
+    }
+  ],
+  "product": [
+    {
+      "namaProduct": "minyak belog",
+      "harga": 700000,
+      "stock": 4,
+      "berat": 100,
+      "kondisi": "Baru",
+      "kategori": "minyak",
+      "image": "product-1.jpg",
+      "deskripsi": "minyak yang bagus untuk menjaga kesehatan",
+      "id": 1
+    },
+    {
+      "namaProduct": "minyak belog 2",
+      "harga": 500000,
+      "berat": 102,
+      "stock": 8,
+      "kondisi": "Baru",
+      "kategori": "minyak",
+      "image": "product-2.jpg",
+      "deskripsi": "minyak yang bagus untuk menjaga kesehatan",
+      "id": 2
+    },
+    {
+      "namaProduct": "minyak belog 3",
+      "harga": 500000,
+      "berat": 102,
+      "stock": 4,
+      "kondisi": "Baru",
+      "kategori": "minyak",
+      "image": "product-2.jpg",
+      "deskripsi": "minyak yang bagus untuk menjaga kesehatan",
+      "id": 3
+    }
+  ],
+  "agen": [
+    {
+      "nama": "Fajar",
+      "harga": 700000,
+      "jarak": "2000 km",
+      "ongkir": 20000,
+      "phone": "08225265301",
+      "id": 1
+    },
+    {
+      "nama": "B3st",
+      "harga": 800000,
+      "jarak": "1000 km",
+      "ongkir": 10000,
+      "phone": "08225152515",
+      "id": 2
+    },
+    {
+      "nama": "Kurir",
+      "harga": 800000,
+      "jarak": "1000 km",
+      "ongkir": 10000,
+      "phone": "08225152515",
+      "id": 3
+    }
+  ],
+  "orders": [
+    {
+      "id_user": 2,
+      "item": [
+        {
+          "id": 2,
+          "id_user": 2,
+          "id_product": 1,
+          "id_agen": 1,
+          "namaProduct": "minyak belog",
+          "harga": 700000,
+          "status": "pending"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "id_user": 2,
+      "item": [
+        {
+          "id": 2,
+          "id_user": 2,
+          "id_product": 1,
+          "id_agen": 2,
+          "namaProduct": "minyak belog",
+          "harga": 700000,
+          "status": "pending"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "id_user": 2,
+      "item": [
+        {
+          "id": 2,
+          "id_user": 2,
+          "id_product": 3,
+          "id_agen": 2,
+          "namaProduct": "minyak belog 3",
+          "harga": 500000,
+          "status": "pending"
+        }
+      ],
+      "id": 3
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "some comment",
+      "postId": 1
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  }
+}

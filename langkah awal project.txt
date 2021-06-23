@@ -1,0 +1,29 @@
+membuat project minyak belog
+step by step
+install react native navigation
+perintah : 
+1. yarn add @react-navigation/native
+2. yarn add react-native-reanimated react-native-gesture-handler react-native-screens react-native-safe-area-context @react-native-community/masked-view
+3. yarn add @react-navigation/stack
+4. yarn add @react-navigation/bottom-tabs
+
+install react native svg 
+1.yarn add react-native-svg
+2. yarn add --dev react-native-svg-transformer
+dan pada file metro paste ini : 
+const { getDefaultConfig } = require("metro-config");
+
+module.exports = (async () => {
+  const {
+    resolver: { sourceExts, assetExts }
+  } = await getDefaultConfig();
+  return {
+    transformer: {
+      babelTransformerPath: require.resolve("react-native-svg-transformer")
+    },
+    resolver: {
+      assetExts: assetExts.filter(ext => ext !== "svg"),
+      sourceExts: [...sourceExts, "svg"]
+    }
+  };
+})();
