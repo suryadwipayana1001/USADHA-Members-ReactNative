@@ -32,6 +32,7 @@ import {
   Reset,
   UploadImg,
   LogNotif,
+  UpgradeType,
 } from '../pages';
 import {ButtomNavigator, NotifAlert} from '../component';
 
@@ -194,6 +195,11 @@ const Router = () => {
       <Stack.Screen
         name="LogNotif"
         component={LogNotif}
+        options={{headerShown: false}}
+      />
+       <Stack.Screen
+        name="UpgradeType"
+        component={UpgradeType}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
