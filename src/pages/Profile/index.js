@@ -1,26 +1,24 @@
-import React, {useState, useEffect} from 'react';
-import {Image, StyleSheet, Text, View, Linking, FlatList, Share} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { useIsFocused } from '@react-navigation/native';
+import Axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Alert, FlatList, Image, Linking, Share, StyleSheet, Text, View } from 'react-native';
+import Config from 'react-native-config';
 import {
   ScrollView,
   TextInput,
-  TouchableOpacity,
+  TouchableOpacity
 } from 'react-native-gesture-handler';
-import {barcode, profile, promo} from '../../assets';
-import {ButtonCustom, Header, HeaderComponent, Releoder} from '../../component';
-import {colors} from '../../utils/colors';
-import Axios from 'axios';
-import {useDispatch, useSelector} from 'react-redux';
+import QRCode from 'react-native-qrcode-svg';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useDispatch, useSelector } from 'react-redux';
+import { profile } from '../../assets';
+import { ButtonCustom, HeaderComponent, Releoder } from '../../component';
 // import DropDownPicker from 'react-native-dropdown-picker';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import { Rupiah } from '../../helper/Rupiah';
-import {useIsFocused} from '@react-navigation/native';
-import QRCode from 'react-native-qrcode-svg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-import { Alert } from 'react-native';
-import Config from 'react-native-config';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import Clipboard from '@react-native-clipboard/clipboard';
+import { colors } from '../../utils/colors';
 
 function useForceUpdate() {
   const [refresh, setRefresh] = useState(0); // integer state
@@ -548,7 +546,20 @@ const Profile = ({navigation}) => {
               onChangeText={(value) => onInputChange('address', value)}
             />
             <Text style={styles.textUsername}>Type</Text>
-            <Text style={styles.type}>{form.type}</Text>
+            <View style={{flexDirection:'row',  alignItems : 'center', marginTop:10}}>
+              <ButtonCustom 
+                name = {form.type}                
+                color = {colors.default}
+                width = '30%'
+              />
+              <View style={{marginHorizontal : 10}} />
+              <ButtonCustom 
+                name = 'Upgrade'
+                color = {colors.btn}
+                width = '50%'
+                func = {() => navigation.navigate('UpgradeType')}
+              />
+            </View>
             {/* <TouchableOpacity style={styles.borderLogin} onPress={updateData}>
               <Text style={styles.textBtnLogin}>Save</Text>
             </TouchableOpacity> */}
