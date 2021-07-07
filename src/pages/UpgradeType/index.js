@@ -164,6 +164,7 @@ const UpgradeType = ({navigation}) => {
 
                 // dispatchEvent({type : 'SET_DATA_USER', value:dataUser});
                 // storeDataUser(dataUser) 
+                navigation.navigate('Dashboard')
                 setloading(false)
             }).catch((e) => {
                 // console.log(e.request);
