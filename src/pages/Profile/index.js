@@ -73,12 +73,14 @@ const Input = ({title,placeholder ='', ...rest}) => {
 const Profile = ({navigation}) => {
   const userReducer = useSelector((state) => state.UserReducer);
   const [form, setForm] = useState(userReducer);
-  // console.log(userReducer);
+  console.log(userReducer);
   const dispatch = useDispatch();  
   const TOKEN = useSelector((state) => state.TokenApi);
   const [loading, setLoading] = useState(true);
   const [paket, setPaket] = useState(null)
   const [point, setPoint] = useState (0)
+  const [pointUpgrade, setPointUpgrade] = useState (0)
+  const [pointSaving, setPointSaving] = useState (0)
   const [selectedId, setSelectedId] = useState(null);
   const isFocused = useIsFocused();
   const [agen,setAgen] = useState()
@@ -106,6 +108,7 @@ const Profile = ({navigation}) => {
       getPaket()
       getPoint();
       getAgen();
+      setForm(userReducer)
     }
     setSelectAgen(false)
   }, [isFocused])
@@ -222,6 +225,8 @@ const Profile = ({navigation}) => {
     .then((result) => {
       // console.log('data point api', result.data.data[0].balance_points)
       setPoint(parseInt(result.data.data[0].balance_points))
+      setPointUpgrade(parseInt(result.data.data[0].balance_upgrade_points))
+      setPointSaving(parseInt(result.data.data[0].balance_saving_points))
       getAgen()
     }).catch(() => {
       alert('koneksi error, mohon buka ulang aplikasinya')
@@ -464,7 +469,7 @@ const Profile = ({navigation}) => {
               /> */}
             </View>
             <View style={{ marginTop : 20, maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Link Riferal</Text>
+              <Text style={{flex:2}}>Link Referral :</Text>
               <View style={{flex:4}}>
                 <Text  onPress={() => Linking.openURL(form.ref_link)}  style={{color : 'red'}}>{form.ref_link}</Text>
                 <View style={{flexDirection:'row', marginTop:10}}>
@@ -479,6 +484,22 @@ const Profile = ({navigation}) => {
                 </View>
               </View>
             </View>
+
+            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
+              <Text style={{flex:2}}>Poin Belanja :</Text>
+              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(point)}</Text>
+            </View>
+
+            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
+              <Text style={{flex:2}}>Poin Upgrade :</Text>
+              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointUpgrade)}</Text>
+            </View>
+
+            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
+              <Text style={{flex:2}}>Poin Tabungan :</Text>
+              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointSaving)}</Text>
+            </View>
+
             <Text style={{fontSize: 18, fontWeight: 'bold'}}>Edit Profile</Text>
             <View
               style={{
@@ -545,17 +566,17 @@ const Profile = ({navigation}) => {
               value={form.address}
               onChangeText={(value) => onInputChange('address', value)}
             />
-            <Text style={styles.textUsername}>Type</Text>
+            <Text style={styles.textUsername} onPress={() => console.log('reducer' , userReducer)} >Type</Text>
             <View style={{flexDirection:'row',  alignItems : 'center', marginTop:10}}>
               <ButtonCustom 
-                name = {form.type}                
+                name = {form.activations.name}                
                 color = {colors.default}
                 width = '30%'
               />
               <View style={{marginHorizontal : 10}} />
               <ButtonCustom 
                 name = 'Upgrade'
-                color = {colors.btn}
+                color = {colors.btn_primary}
                 width = '50%'
                 func = {() => navigation.navigate('UpgradeType')}
               />
@@ -692,6 +713,9 @@ const styles = StyleSheet.create({
     fontWeight : 'bold',
     marginBottom : 10,
     color : '#ff781f'
+  },
+  textPoint : {
+    fontWeight : 'bold',
   },
   type: {
     marginTop : 10,

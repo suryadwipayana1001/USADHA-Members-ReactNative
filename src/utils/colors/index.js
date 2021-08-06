@@ -3,6 +3,7 @@ export const colors = {
   disable: '#cfd3ce',
   dark: '#474747',
   btn: '#ff781f',
+  btn_primary: '#007BFF',
   borderColor: '#bbbbbb',
   text: {
     default: '#ffffff',

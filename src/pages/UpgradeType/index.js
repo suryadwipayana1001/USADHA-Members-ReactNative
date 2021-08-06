@@ -7,11 +7,11 @@ import { StyleSheet, View } from 'react-native'
 import Config from 'react-native-config'
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useSelector } from 'react-redux'
 import { profile, promo2 } from '../../assets'
 import { ButtonCustom, Header2, Releoder } from '../../component'
 import { Rupiah } from '../../helper/Rupiah'
 import { colors } from '../../utils/colors'
+import { useDispatch, useSelector } from 'react-redux';
 
 const Item = (props) => {
     return(
@@ -49,6 +49,7 @@ const UpgradeType = ({navigation}) => {
     const [agen, setAgen] = useState(true)
     const [point, setPoint] = useState(0)
     const [pageAgen, setPageAgen] = useState(false)
+    const dispatch = useDispatch();
     const [form, setForm] = useState({
         id : userReducer.id,
         package_id : null,
@@ -76,7 +77,7 @@ const UpgradeType = ({navigation}) => {
 
     const ApiPaket = () => {
         const promisePaket = new Promise((resolve, reject) => {
-            axios.get('http://admin.belogherbal.com/api/close/products-member-upgrade', 
+            axios.get(Config.API_PACKAGES_UPGRADE + `${userReducer.activation_type_id}`,
             {
                 headers: {
                     Authorization: `Bearer ${TOKEN}`,
@@ -152,7 +153,7 @@ const UpgradeType = ({navigation}) => {
     const activasi = () => {
         if(form.package_id !=null && form.agents_id != null && form.id !=null){
             setloading(true)
-            axios.post('http://admin.belogherbal.com/api/close/upgrade', form,
+            axios.post(Config.API_UPGRADE, form,
                 {
                     headers: {
                     Authorization: `Bearer ${TOKEN}`,
@@ -160,11 +161,10 @@ const UpgradeType = ({navigation}) => {
                     }
                 }
             ).then((res) => {
-                // console.log(res);
-
-                // dispatchEvent({type : 'SET_DATA_USER', value:dataUser});
-                // storeDataUser(dataUser) 
-                navigation.navigate('Dashboard')
+                console.log(res);
+                dispatch({type : 'SET_DATA_USER', value:res.data.data});
+                storeDataUser(res.data.data) 
+                navigation.navigate('NotifAlert', {notif : 'Upgrade Berhasil'})
                 setloading(false)
             }).catch((e) => {
                 // console.log(e.request);
@@ -177,6 +177,15 @@ const UpgradeType = ({navigation}) => {
             alert('data belum lengkap')
         }
     }
+
+    const storeDataUser = async (value) => {
+        try {
+          const jsonValue = JSON.stringify(value)
+          await AsyncStorage.setItem('@LocalUser', jsonValue)
+        } catch (e) {
+          console.log('Token not Save')
+        }
+      }
 
     if(loading){
         return (<Releoder/>)
@@ -295,6 +304,7 @@ const styles = StyleSheet.create({
         elevation: 5,
         padding : 10,
         borderRadius : 5,
+        marginBottom : 10
         // height : 300,
     }),
     titleItem : {
