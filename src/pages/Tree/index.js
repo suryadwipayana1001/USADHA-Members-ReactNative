@@ -56,6 +56,18 @@ const ExpandDown =()=>{
        </View>
     )
 }
+const ExpandUp =(props)=>{
+    return(
+        <TouchableOpacity onPress={props.onPress}>
+            <View style={{alignItems:'center'}}>
+                <View style={styles.boxExpand}>
+                        <Image source={circleup} style={{width:20, height:20}}/>
+                </View>
+                <LineVertical/>
+            </View>
+         </TouchableOpacity>
+    )
+}
 const LineVertical =()=>{
     return(
         <View style={{backgroundColor:'#696969',height : 70, width:1}}>
@@ -197,8 +209,9 @@ const BoxDataMid =(props)=>{
         }
     }   
     return(
+        // <ExpandUp onPress={() => {getDownline(userReducer.ref_id); setUserReducer(lastUserReducer.pop()); }}
         <View style={{alignItems:'center'}}>
-           
+            {props.show? <ExpandUp onPress={props.onPress} /> : null}
             <View style={styles.boxData}>
             <View style={{alignItems:'center'}}>
                 <Image source={avatar} style={{width:80, height:80}}/>
@@ -257,9 +270,11 @@ const BoxDataMid =(props)=>{
                     </View>
                 </View>
             </View>
-            <View style={{alignItems:'center'}}>
-                <LineVertical/>
-            </View>
+            {!props.lineVertical &&
+                <View style={{alignItems:'center'}}>
+                  <LineVertical/>
+                </View>
+            }
             {props.end}
         </View>
     )
@@ -374,17 +389,20 @@ const Tree = ({navigation}) => {
                             <View style={{alignItems:'center', paddingHorizontal:20, paddingVertical:20}}>
                                 <ScrollView horizontal>
                                     <View style={{flexDirection:'column',  justifyContent:'center'}}>
-                                        <View style={{flexDirection:'row',height:'auto', justifyContent:'center'}}>
-                                            {baseDataUser.id != userReducer.id ? <ExpandLeft onPress={() => {getDownline(userReducer.ref_id); setUserReducer(lastUserReducer.pop()); }} /> : null}
-                                            <BoxDataLeft user= {userReducer}  />
-                                            {/* <BoxDataMid/> */}
-
+                                        <View style={{height:'auto', justifyContent:'center'}}>
+                                            {/* {baseDataUser.id != userReducer.id ? <ExpandUp onPress={() => {getDownline(userReducer.ref_id); setUserReducer(lastUserReducer.pop()); }} /> : null} */}
+                                            <View style={{ flexDirection:'row' }} >
+                                                <View style={{ width:70 }} />
+                                                    <BoxDataMid user = {userReducer} show ={baseDataUser.id != userReducer.id ? true : false} onPress={() => {getDownline(userReducer.ref_id); setUserReducer(lastUserReducer.pop());}}  lineVertical = {data.length > 0 ?false :true}  />
+                                                <View style={{ width:120 }} />
+                                            </View>
+                                            
                                             <View >
                                                 {!isLoading && data.map((item, index) => {
                                                     return (
-                                                        <View style={{flexDirection : 'row'}} >
-                                                            
-                                                            <BoxDataMid user = {item}/>
+                                                        <View style={{flexDirection : 'row'}} key={index} >
+                                                            <View style={{ width:70 }} />
+                                                            <BoxDataMid user = {item}  lineVertical = {(data.length-1) <= index ? true :false}  />
                                                             <ExpandRight onPress={() => {getDownline(item.id); setUserReducer(item); setFirstUserReducer(userReducer); lastUserReducer.push(userReducer)}} /> 
                                                         </View>
                                                     )
