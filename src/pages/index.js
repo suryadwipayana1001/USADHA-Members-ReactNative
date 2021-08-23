@@ -28,6 +28,7 @@ import Reset from './Reset';
 import UploadImg from './UploadImg';
 import LogNotif from './LogNotif';
 import UpgradeType from './UpgradeType';
+import Tree from './Tree'
 export {
   Product,
   Profile,
@@ -58,5 +59,6 @@ export {
   Reset,
   UploadImg,
   LogNotif,
-  UpgradeType
+  UpgradeType,
+  Tree
 };

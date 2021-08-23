@@ -65,6 +65,14 @@ const Menu = ({navigation}) => {
             />
           </View>
           <View style={styles.menu}>
+            <Text style={styles.titleMenu}>Pohon Jaringan</Text>
+            <SubMenu 
+              titleMenu="Pohon Jaringan" 
+              icon="tree" 
+              navigasi={() => navigation.navigate('Tree')}
+            />
+          </View>
+          <View style={styles.menu}>
             <Text style={styles.titleMenu}>Withdraw</Text>
             <SubMenu 
               titleMenu="Withdraw" 

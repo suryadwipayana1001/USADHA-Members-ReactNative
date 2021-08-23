@@ -33,6 +33,7 @@ import {
   UploadImg,
   LogNotif,
   UpgradeType,
+  Tree,
 } from '../pages';
 import {ButtomNavigator, NotifAlert} from '../component';
 
@@ -200,6 +201,11 @@ const Router = () => {
        <Stack.Screen
         name="UpgradeType"
         component={UpgradeType}
+        options={{headerShown: false}}
+      />
+       <Stack.Screen
+        name="Tree"
+        component={Tree}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
