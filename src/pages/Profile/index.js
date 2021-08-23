@@ -3,7 +3,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { useIsFocused } from '@react-navigation/native';
 import Axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, Linking, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, Linking, Share, StyleSheet, Text, View, Dimensions } from 'react-native';
 import Config from 'react-native-config';
 import {
   ScrollView,
@@ -19,6 +19,11 @@ import { ButtonCustom, HeaderComponent, Releoder } from '../../component';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import { Rupiah } from '../../helper/Rupiah';
 import { colors } from '../../utils/colors';
+import Geolocation from '@react-native-community/geolocation';
+import { PermissionsAndroid } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
+
 
 function useForceUpdate() {
   const [refresh, setRefresh] = useState(0); // integer state
@@ -73,7 +78,6 @@ const Input = ({title,placeholder ='', ...rest}) => {
 const Profile = ({navigation}) => {
   const userReducer = useSelector((state) => state.UserReducer);
   const [form, setForm] = useState(userReducer);
-  console.log(userReducer);
   const dispatch = useDispatch();  
   const TOKEN = useSelector((state) => state.TokenApi);
   const [loading, setLoading] = useState(true);
@@ -92,13 +96,20 @@ const Profile = ({navigation}) => {
   const [status, setStatus] = useState(form.status)
   const [password, setPassword] = useState(null)
   const [confirmPassword, setConfirmPassword] = useState(null)
+  const [oldCities, setOldCities] = useState(null)
+  const [location, setLocation] = useState({
+    latitude: 0.00000000,
+    longitude: 0.00000000
+  })  
   let dataUpdate = {
     id : '',
     name : '',
     phone : '',
     email : '',
     // password : '',
-    address : ''
+    address : '',
+    lat :'',
+    lng : '',
   }
 
   
@@ -109,9 +120,52 @@ const Profile = ({navigation}) => {
       getPoint();
       getAgen();
       setForm(userReducer)
+      LocationServicesDialogBox.checkLocationServicesIsEnabled({
+        message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
+        ok: "YES",
+        cancel: "NO",
+      }).then(function(success) {
+          requestLocationPermission().then((result) => {
+              Geolocation.getCurrentPosition((position) => {
+                     setLocation({
+                      latitude: position.coords.latitude,
+                      longitude: position.coords.longitude, 
+                    })
+                    setLoading(false)
+                },
+                (error) => {
+                    console.log(error);    
+                    setLoading(false)
+                },
+                    { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+                );
+          })
+      }).catch((error) => {
+          console.log(error.message); // error.message => "disabled"
+          setLoading(false)
+      })
     }
-    setSelectAgen(false)
   }, [isFocused])
+
+  const requestLocationPermission =  async () => {
+    try {
+        const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          'title': 'Location Permission',
+          'message': 'MyMapApp needs access to your location'
+        }
+        )
+
+       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+           console.log("Location permission granted")
+       } else {
+           console.log("Location permission denied")
+       }
+    } catch (err) {
+       console.warn(err)
+    }
+  }
 
   const getPaket = () => {
     Axios.get(Config.API_PACKAGES_MEMBER, 
@@ -168,6 +222,8 @@ const Profile = ({navigation}) => {
     dataUpdate.phone = form.phone
     dataUpdate.email = form.email
     dataUpdate.id = form.id
+    dataUpdate.lng = form.lng
+    dataUpdate.lat = form.lat
     setLoading(true)
     if(password !== null ) {
      if(password === confirmPassword){
@@ -587,26 +643,52 @@ const Profile = ({navigation}) => {
 
               <View style = {{alignItems : 'center', justifyContent : 'center', marginTop : 20}}>
                 <ButtonCustom
-                  name = 'Update Data'
-                  color = {colors.btn}
-                  width = '100%'
-                  // func = {() => updateData()}
-                  func = {() => Alert.alert(
-                    'Peringatan',
-                    `Anda akan memperbarui profile ? `,
-                    [
-                        {
-                            text : 'Tidak',
-                            onPress : () => console.log(`tidak`)
-                        },
-                        {
-                            text : 'Ya',
-                            onPress : () => updateData()
-                        }
-                    ]
-                )}
-              />
+                    name = 'Update Data'
+                    color = {colors.btn}
+                    width = '100%'
+                    // func = {() => updateData()}
+                    func = {() => Alert.alert(
+                      'Peringatan',
+                      `Anda akan memperbarui profile ? `,
+                      [
+                          {
+                              text : 'Tidak',
+                              onPress : () => console.log(`tidak`)
+                          },
+                          {
+                              text : 'Ya',
+                              onPress : () => updateData()
+                          }
+                      ]
+                  )}
+                />
               </View>
+
+              <View style={{marginTop:40}}>
+                <MapView
+                    style={styles.map}
+                    //  provider={PROVIDER_GOOGLE}
+                    // showsUserLocation
+                    initialRegion={{
+                      latitude: parseFloat(form.lat) == 0.00000000 ?  location.latitude : parseFloat(form.lat),
+                      longitude: parseFloat(form.lng) == 0.00000000 ?location.longitude : parseFloat(form.lng),
+                      latitudeDelta:0.0022,
+                      longitudeDelta:0.0121}}
+                      followsUserLocation={true}
+                >
+                    <Marker
+                        coordinate={{latitude : (parseFloat(form.lat) == 0.00000000 ?  location.latitude : parseFloat(form.lat)), longitude:(parseFloat(form.lng) == 0.00000000 ?location.longitude : parseFloat(form.lng))}}
+                        // onDragEnd={e => console.log('onDragEnd', e.nativeEvent.coordinate.latitude)}
+                        onDragEnd={(e) => setForm({
+                            ...form,
+                            lat : e.nativeEvent.coordinate.latitude,
+                            lng : e.nativeEvent.coordinate.longitude
+                        })}
+                        draggable
+                    >
+                    </Marker>
+                </MapView>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -727,5 +809,9 @@ const styles = StyleSheet.create({
     backgroundColor : 'rgba(250, 190, 88, 1)',
     borderColor : 'rgba(250, 190, 88, 1)',
     color : '#ffffff'
-  }
+  },
+  map: {
+    height : 300,
+    width : '100%',
+  },
 });
