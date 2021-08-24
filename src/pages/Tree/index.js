@@ -187,27 +187,29 @@ const BoxDataMid =(props)=>{
         backgroundColor : '#ffffff',
         borderColor : '#ffffff'
     }
-    if(user.activations.name == 'user'){
-        typeColor = {
-            backgroundColor : '#1AE383',
-            borderColor : '#13CE75'   
-        }
-    }else if(user.activations.name == 'gold'){
-        typeColor = {
-            backgroundColor : '#FFDC26',
-            borderColor : '#EFBD3C'   
-        }
-    }else if(user.activations.name == 'silver'){
-        typeColor = {
-            backgroundColor : '#E5E5E5',
-            borderColor : '#DDDCDC'   
-        }
-    }else if(user.activations.name == 'platinum'){
-        typeColor = {
-            backgroundColor : '#FF0000',
-            borderColor : '#E30303'   
-        }
-    }   
+    if(user.activations){
+        if(user.activations.name == 'user'){
+            typeColor = {
+                backgroundColor : '#1AE383',
+                borderColor : '#13CE75'   
+            }
+        }else if(user.activations.name == 'gold'){
+            typeColor = {
+                backgroundColor : '#FFDC26',
+                borderColor : '#EFBD3C'   
+            }
+        }else if(user.activations.name == 'silver'){
+            typeColor = {
+                backgroundColor : '#E5E5E5',
+                borderColor : '#DDDCDC'   
+            }
+        }else if(user.activations.name == 'platinum'){
+            typeColor = {
+                backgroundColor : '#FF0000',
+                borderColor : '#E30303'   
+            }
+        }   
+    }
     return(
         // <ExpandUp onPress={() => {getDownline(userReducer.ref_id); setUserReducer(lastUserReducer.pop()); }}
         <View style={{alignItems:'center'}}>
@@ -254,7 +256,7 @@ const BoxDataMid =(props)=>{
                         <Text style={styles.label}>: </Text>
                     </View>
                     <View style={{flex:2}}>
-                        <Text style={styles.text}>{user.activations.name}</Text>
+                        {user.activations && <Text style={styles.text}>{user.activations.name}</Text>}
                     </View>
                 </View>
                 <View style={styles.boxText}>
@@ -277,7 +279,7 @@ const BoxDataMid =(props)=>{
                         <Text style={styles.label}>: </Text>
                     </View>
                     <View style={{flex:2}}>
-                        <Text style={styles.text}>{user.activation_at.slice(0,10)}</Text>
+                      {user.activations &&   <Text style={styles.text}>{user.activation_at.slice(0,10)}</Text>}
                     </View>
                 </View>
             </View>
@@ -327,7 +329,7 @@ const Tree = ({navigation}) => {
                 setData(res.data.data)
                 setIsLoading(false)
           }).catch(e => {
-              console.log(e.response);
+              console.log(e);
               alert('gagal ambil data')
           }).finally(f => setIsLoading(false))
 
