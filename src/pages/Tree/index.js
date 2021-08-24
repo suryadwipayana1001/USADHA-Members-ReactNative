@@ -257,6 +257,17 @@ const BoxDataMid =(props)=>{
                         <Text style={styles.text}>{user.activations.name}</Text>
                     </View>
                 </View>
+                <View style={styles.boxText}>
+                    <View style={{flex:1.2}}>
+                        <Text style={styles.label}>Refferal</Text>
+                    </View>
+                    <View style={{flex:0.1}}>
+                        <Text style={styles.label}>: </Text>
+                    </View>
+                    <View style={{flex:2}}>
+                        <Text style={styles.text}>{user.refferal.code} - {user.refferal.name}</Text>
+                    </View>
+                </View>
                 <View style={{width:'100%', height:1, backgroundColor:'#C4C4C4',marginVertical:5}}></View>
                 <View style={styles.boxText}>
                     <View style={{flex:1.2}}>
