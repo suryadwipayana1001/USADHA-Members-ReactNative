@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View, Image, ActivityIndicator} from 'react-native';
-import {ScrollView, TouchableOpacity} from 'react-native-gesture-handler';
+import {LongPressGestureHandler, ScrollView, TouchableOpacity} from 'react-native-gesture-handler';
 import {profile} from '../../assets';
 import {Header, TopUp, Promo, Releoder, ButtonCustom, HeaderComponent, Header2} from '../../component';
 import {colors} from '../../utils/colors';
@@ -8,8 +8,11 @@ import Axios from 'axios';
 import {useDispatch, useSelector} from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Config from "react-native-config";
-
-
+import { getDistance } from 'geolib';
+import Geolocation from '@react-native-community/geolocation'
+import { PermissionsAndroid } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import LocationServicesDialogBox from "react-native-android-location-services-dialog-box"
 const List = (props) => {
   return (
     <View style={styles.body}>
@@ -31,22 +34,137 @@ const Agen = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [agen, setAgen] = useState(null);
   const TOKEN = useSelector((state) => state.TokenApi);
+  const [agenDistance, setAgenDistance] = useState(null)
+  const isFocused = useIsFocused()
+  const [enableLocation, setEnableLocation] = useState()
+  var location= {
+    latitude: null,
+    longitude: null
+}
   useEffect(() => {
-    Axios.get(Config.API_AGENTS, 
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          'Accept' : 'application/json' 
-        }
+    if(isFocused){
+        // requestLocationPermission().then(res => {
+          LocationServicesDialogBox.checkLocationServicesIsEnabled({
+              message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
+              ok: "YES",
+              cancel: "NO",
+          }).then(success => {
+            Promise.all([apiAgents(), requestLocationPermission()]).then(res => {
+                let dataAgen=res[0]
+                setAgen(res[0])
+                console.log('1');
+                Geolocation.getCurrentPosition( 
+                    (position) => {
+                      location.latitude = position.coords.latitude;
+                      location.longitude = position.coords.longitude;
+                  // setLoading(false) 
+                      console.log('2');
+                      let arrayAgen = [];
+                      dataAgen.map((item, index) => {
+                        var distance = getDistance(
+                            {latitude: position.coords.latitude, longitude:  position.coords.longitude},
+                            {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
+                            );
+                            arrayAgen[index] = {
+                                id : item.id,
+                                name : item.name,
+                                phone  : item.phone,
+                                email : item.email,
+                                img : item.img, 
+                                distance : distance
+                            }
+                        })
+                        console.log('asas',arrayAgen.sort(function (a, b) {
+                          return a.distance - b.distance;
+                        }));
+                        // console.log(arrayAgen.sort(compare));
+                        setAgen(arrayAgen.sort(function (a, b) {
+                          return a.distance - b.distance;
+                        }))
+                        setIsLoading(false)
+                  },
+                  (error) => {
+                      console.log('3');    
+                      setIsLoading(false)
+                  },
+                  { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+                  );
+              }).catch(e => {
+                console.log('4');
+                setIsLoading(false)
+              })
+          }).catch(e => {
+            console.log(e.message);
+            apiAgents().then(item => {
+              console.log('5');
+              setAgen(item)
+              setIsLoading(false)
+            }).catch(e => {
+              console.log('6');
+              setIsLoading(false)
+            })
+          })
+        
       }
-    ).then((result) => {
-        // console.log(result.data)
-        setAgen(result.data)
-        setIsLoading(false)
-    });
+    }, [isFocused]);
 
-  }, []);
 
+  const apiAgents = () => {
+    // console.log('root path',RootPath);
+    const promise = new Promise ((resolve, reject) => {
+      Axios.get(Config.API_AGENTS, 
+        {
+          headers: {
+            Authorization: `Bearer ${TOKEN}`,
+            'Accept' : 'application/json' 
+          }
+        }).then((result) => {
+                resolve(result.data);
+        }, (err) => {
+              reject(err);
+        })
+    })
+    return promise;
+}
+
+  function compare(a, b) {
+    // Use toUpperCase() to ignore character casing
+      const distance1 = a.distance
+      const distance2 = b.distance
+    
+      let comparison = 0;
+      if (distance1 > distance2) {
+        comparison = 1;
+      } else if (distance1 < distance2) {
+        comparison = -1;
+      }
+      return comparison;
+  }
+
+  const requestLocationPermission =  async () => {
+    let info ='';
+    try {
+        const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          'title': 'Location Permission',
+          'message': 'MyMapApp needs access to your location'
+        }
+        )
+
+       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setEnableLocation(true)
+       } else {
+          setEnableLocation(false)
+       }
+    } catch (err) {
+        info=1
+    }
+
+    return enableLocation
+  }
+
+  
   if (isLoading) {
     return  (
       <Releoder/>
@@ -74,7 +192,7 @@ const Agen = ({navigation}) => {
               />
             );
           })}
-          {/* <Text>halo</Text> */}
+          {/* <Text onPress={()=> console.log(enableLocation)} >halo</Text> */}
         </View>
       </ScrollView>
     </SafeAreaView>
