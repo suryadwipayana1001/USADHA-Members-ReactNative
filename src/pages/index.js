@@ -29,6 +29,7 @@ import UploadImg from './UploadImg';
 import LogNotif from './LogNotif';
 import UpgradeType from './UpgradeType';
 import Tree from './Tree'
+import Courier from './Courier'
 export {
   Product,
   Profile,
@@ -60,5 +61,6 @@ export {
   UploadImg,
   LogNotif,
   UpgradeType,
-  Tree
+  Tree,
+  Courier
 };

@@ -53,12 +53,28 @@ const CheckOut = ({navigation, route}) => {
   const [point, setPoint] = useState(0);
   const [total, setTotal] = useState(0);
   const TOKEN = useSelector((state) => state.TokenApi);
+  const dataOngkir = route.params.dataOngkir
   var pesanan = 0;
   const dataCart=[]
   let isMounted = true
+  const dateRegister = () => {
+    var todayTime = new Date();
+    var month = todayTime.getMonth() + 1;
+    var day = todayTime.getDate();
+    var year = todayTime.getFullYear();
+    return year + "-" + month + "-" + day;
+  }
   
+  const [orders, setOrders] = useState({
+    register: dateRegister(),
+    customers_id: userReducer.id,
+    memo: "",
+    agents_id : route.params.dataAgen.id,
+    cart: dataCart,
+  });
   useEffect(() => {
     isMounted = true
+    orders.ongkir =dataOngkir.cost
     cartState.item.map((cart) => {
       dataCart[dataCart.length] = {
         products_id : cart.id,
@@ -92,24 +108,10 @@ const CheckOut = ({navigation, route}) => {
     return () => { isMounted = false };
   }, [isFocused]);
   
-  const dateRegister = () => {
-    var todayTime = new Date();
-    var month = todayTime.getMonth() + 1;
-    var day = todayTime.getDate();
-    var year = todayTime.getFullYear();
-    return year + "-" + month + "-" + day;
-  }
-  
-  const [orders, setOrders] = useState({
-    register: dateRegister(),
-    customers_id: userReducer.id,
-    memo: "",
-    agents_id : route.params.dataAgen.id,
-    cart: dataCart,
-  });
+
   
   const ordersData = () => {
-    
+   
       if(point >= total){
         setIsLoading(true)
         Axios.post(Config.API_ORDER, orders,
@@ -142,6 +144,8 @@ const CheckOut = ({navigation, route}) => {
         // navigation.navigate('CheckOut')
         alert('point anda kurang');
       }
+
+   
   };
 
   if (isLoading) {
@@ -191,6 +195,28 @@ const CheckOut = ({navigation, route}) => {
                 justifyContent: 'space-between',
                 marginBottom: 6,
               }}>
+              <Text>Kurir </Text>
+              <Text>
+                {dataOngkir.courier}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 6,
+              }}>
+              <Text>Berat </Text>
+              <Text>
+                {dataOngkir.weight} (granm)
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 6,
+              }}>
               <Text>Sub Total Item ({cartReducer.item.length} Barang)</Text>
               <Text>{Rupiah(cartReducer.total)}</Text>
             </View>
@@ -201,7 +227,7 @@ const CheckOut = ({navigation, route}) => {
                 marginBottom: 6,
               }}>
               <Text>Biaya Pengiriman ({cartReducer.item.length} Barang)</Text>
-              <Text>{Rupiah(0)}</Text>
+              <Text>{Rupiah(dataOngkir.cost)}</Text>
             </View>
             <View
               style={{
@@ -213,7 +239,7 @@ const CheckOut = ({navigation, route}) => {
                 Total Harga ({cartReducer.item.length} Barang)
               </Text>
               <Text style={{fontWeight: 'bold'}}>
-                {Rupiah(cartReducer.total)}
+                {Rupiah(cartReducer.total + dataOngkir.cost)}
               </Text>
             </View> 
           </View>
@@ -229,7 +255,7 @@ const CheckOut = ({navigation, route}) => {
                   [
                       {
                           text : 'Tidak',
-                          onPress : () => console.log('tidak')
+                          onPress : () => console.log(cartReducer)
                       },
                       {
                           text : 'Ya',

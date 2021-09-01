@@ -23,8 +23,8 @@ import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
-
-
+import { renameKey } from '../../utils';
+import Select2 from 'react-native-select-two';
 function useForceUpdate() {
   const [refresh, setRefresh] = useState(0); // integer state
   return () => setRefresh((refresh) => ++refresh); // update the state to force render
@@ -96,6 +96,8 @@ const Profile = ({navigation}) => {
   const [status, setStatus] = useState(form.status)
   const [password, setPassword] = useState(null)
   const [confirmPassword, setConfirmPassword] = useState(null)
+  const [provinces, setProvinces] = useState(null)
+  const [cities, setCities] = useState(null)
   const [oldCities, setOldCities] = useState(null)
   const [location, setLocation] = useState({
     latitude: 0.00000000,
@@ -110,6 +112,8 @@ const Profile = ({navigation}) => {
     address : '',
     lat :'',
     lng : '',
+    province_id : '',
+    city_id : ''
   }
 
   
@@ -119,6 +123,7 @@ const Profile = ({navigation}) => {
       getPaket()
       getPoint();
       getAgen();
+      locationApi();
       setForm(userReducer)
       LocationServicesDialogBox.checkLocationServicesIsEnabled({
         message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
@@ -147,6 +152,10 @@ const Profile = ({navigation}) => {
     }
   }, [isFocused])
 
+  useEffect(() => {
+    filterCity(userReducer.province_id)
+  }, [oldCities])
+
   const requestLocationPermission =  async () => {
     try {
         const granted = await PermissionsAndroid.request(
@@ -165,6 +174,35 @@ const Profile = ({navigation}) => {
     } catch (err) {
        console.warn(err)
     }
+  }
+
+  const locationApi = () => {
+    Axios.get('http://adminc.belogherbal.com/api/open/location', {
+      headers : {
+        'Accept' : 'application/json'
+      }
+    }).then((result) => {
+      // console.log(result);
+      result.data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
+      result.data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
+      setProvinces( result.data.province)
+      setOldCities(result.data.city)
+    }).catch((e) => {
+      console.log('location', e);
+    }).finally(() => setLoading(false))
+  }
+
+  const filterCity = (id) => {
+    let data = []
+    if(oldCities){
+      oldCities.map((item, index) => {
+        if(item.province_id == id){
+          data[index] = item
+        }
+      })
+    }
+
+    setCities(data)
   }
 
   const getPaket = () => {
@@ -224,6 +262,8 @@ const Profile = ({navigation}) => {
     dataUpdate.id = form.id
     dataUpdate.lng = form.lng
     dataUpdate.lat = form.lat
+    dataUpdate.province_id = form.province_id
+    dataUpdate.city_id = form.city_id
     setLoading(true)
     if(password !== null ) {
      if(password === confirmPassword){
@@ -615,6 +655,54 @@ const Profile = ({navigation}) => {
               value={form.phone}
               onChangeText={(value) => onInputChange('phone', value)}
             />
+            <Text>Provinsi</Text>
+            {provinces &&
+              <Select2
+              isSelectSingle
+              style={{ borderRadius: 5 }}
+              searchPlaceHolderText='Seacrh Province'
+              colorTheme={colors.default}
+              popupTitle="Select Province"
+              // title={form.provinces.title}
+              title={form.provinces ? form.provinces.title : 'Mohon isi data Provinsi'}
+              selectButtonText='select'
+              cancelButtonText = 'cancel'
+              data={provinces}
+              onSelect={value => {
+                onInputChange('province_id', value[0])
+                filterCity(value[0])
+              }}
+              style={{borderColor :colors.default, borderTopWidth : 0, borderRightWidth : 0,  borderLeftWidth : 0,}}
+              onRemoveItem={value => {
+                onInputChange('province_id', value[0])
+              }}
+            />
+            }
+             <View style={{marginVertical : 10}} />
+             {(cities && form.city_id !=='') &&
+              <>
+              <Text>Kota</Text>
+              <View style={{marginVertical : 10}} />
+                  <Select2
+                  isSelectSingle
+                  searchPlaceHolderText='Search City'
+                  style={{ borderRadius: 5 }}
+                  colorTheme={colors.default}
+                  popupTitle="Select Province"
+                  title={form.city ? form.city.title : 'Mohon isi data Kota'}
+                  selectButtonText='select'
+                  cancelButtonText = 'cancel'
+                  data={cities}
+                  onSelect={value => {
+                    onInputChange('city_id', value[0])
+                  }}
+                  onRemoveItem={value => {
+                    onInputChange('city_id', value[0])
+                  }}
+                  style={{borderColor :colors.default, borderTopWidth : 0, borderRightWidth : 0,  borderLeftWidth : 0,}}
+                />
+              </>
+              }
             <Input
               title="Alamat  "
               multiline={true}
@@ -653,7 +741,7 @@ const Profile = ({navigation}) => {
                       [
                           {
                               text : 'Tidak',
-                              onPress : () => console.log(`tidak`)
+                              onPress : () => console.log(cities)
                           },
                           {
                               text : 'Ya',

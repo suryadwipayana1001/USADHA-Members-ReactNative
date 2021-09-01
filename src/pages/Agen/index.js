@@ -1,32 +1,28 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, Image, ActivityIndicator} from 'react-native';
-import {LongPressGestureHandler, ScrollView, TouchableOpacity} from 'react-native-gesture-handler';
-import {profile} from '../../assets';
-import {Header, TopUp, Promo, Releoder, ButtonCustom, HeaderComponent, Header2} from '../../component';
-import {colors} from '../../utils/colors';
-import Axios from 'axios';
-import {useDispatch, useSelector} from 'react-redux';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Config from "react-native-config";
-import { getDistance } from 'geolib';
-import Geolocation from '@react-native-community/geolocation'
-import { PermissionsAndroid } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import { useIsFocused } from '@react-navigation/native';
-import LocationServicesDialogBox from "react-native-android-location-services-dialog-box"
+import Axios from 'axios';
+import { getDistance } from 'geolib';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Image, PermissionsAndroid, StyleSheet, Text, View } from 'react-native';
+import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
+import Config from "react-native-config";
+import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import MapView, { Callout, Marker } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
+import { profile } from '../../assets';
+import { ButtonCustom, Header2, Releoder } from '../../component';
+import { colors } from '../../utils/colors';
 const List = (props) => {
   return (
-    <View style={styles.body}>
-      <Image source={profile} style={styles.image} />
-      <Text style={styles.textNama}>{props.nama}</Text>
-      <Text style={styles.textNama}>{props.email}</Text>
-      <Text style={styles.textNama}>{props.phone}</Text>
-      <ButtonCustom
-        name = 'Pilih Agen'
-        width = '95%'
-        color = {colors.btn}
-        func = {props.select}
-      />
-    </View>
+    <TouchableOpacity onPress={props.select}>
+      <View style={styles.body(props.selectAgen)}>
+        <Image source={profile} style={styles.image} />
+        <Text style={styles.textNama}>{props.nama}</Text>
+        <Text style={styles.textNama}>{props.email}</Text>
+        <Text style={styles.textNama}>{props.phone}</Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -34,13 +30,20 @@ const Agen = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [agen, setAgen] = useState(null);
   const TOKEN = useSelector((state) => state.TokenApi);
-  const [agenDistance, setAgenDistance] = useState(null)
+  // const [agenDistance, setAgenDistance] = useState(null)
+  const [selectAgen, setSelectAgen] = useState(null)
   const isFocused = useIsFocused()
   const [enableLocation, setEnableLocation] = useState()
-  var location= {
-    latitude: null,
-    longitude: null
-}
+  const { width, height } = Dimensions.get('window');
+    const ASPECT_RATIO = width / height;
+    const LATITUDE_DELTA = 1.0922;
+    const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+    const LATITUDE = -8.3978769;
+    const LONGITUDE = 115.2141418;
+    var location= {
+      latitude: 0.0000000,
+      longitude: 0.0000000
+  }
   useEffect(() => {
     if(isFocused){
         // requestLocationPermission().then(res => {
@@ -71,7 +74,9 @@ const Agen = ({navigation}) => {
                                 phone  : item.phone,
                                 email : item.email,
                                 img : item.img, 
-                                distance : distance
+                                distance : distance,
+                                lng : item.lng, 
+                                lat : item.lat
                             }
                         })
                         console.log('asas',arrayAgen.sort(function (a, b) {
@@ -127,19 +132,6 @@ const Agen = ({navigation}) => {
     return promise;
 }
 
-  function compare(a, b) {
-    // Use toUpperCase() to ignore character casing
-      const distance1 = a.distance
-      const distance2 = b.distance
-    
-      let comparison = 0;
-      if (distance1 > distance2) {
-        comparison = 1;
-      } else if (distance1 < distance2) {
-        comparison = -1;
-      }
-      return comparison;
-  }
 
   const requestLocationPermission =  async () => {
     let info ='';
@@ -176,25 +168,72 @@ const Agen = ({navigation}) => {
       <View>
         <Header2 title ='Agen' btn={() => navigation.goBack()}/>
       </View>
-      <Text style={styles.textAgent}>Pilih Agen</Text>
-      <ScrollView>
-        <View style={{padding: 20}}>
-          {agen.map((list) => {
-            return (
-              <List
-                nama={list.name}
-                email={list.email}
-                phone={list.phone}
-                select={() =>
-                  navigation.navigate('CheckOut', {dataAgen: list})
-                }
-                key={list.id}
-              />
-            );
-          })}
-          {/* <Text onPress={()=> console.log(enableLocation)} >halo</Text> */}
+      {/* <Text style={styles.textAgent}>Pilih Agen</Text> */}
+
+      <View style={{ flex : 1 }}>
+        <View style={{ flex : 1 }}>
+          <MapView                    // provider={this.props.provider}
+            // showsUserLocation
+            style={styles.map}
+            initialRegion={{
+                latitude: LATITUDE,
+                longitude: LONGITUDE,
+                latitudeDelta: LATITUDE_DELTA,
+                longitudeDelta: LONGITUDE_DELTA,
+                }}
+            >
+
+            {agen && agen.map((item) => {
+                return (
+                    <Marker
+                        key ={item.id}
+                        coordinate={{latitude : (parseFloat(item.lat) == 0.00000000 ?  location.latitude : parseFloat(item.lat)), longitude:(parseFloat(item.lng) == 0.00000000 ?location.longitude : parseFloat(item.lng))}}
+                        onPress={() => setSelectAgen(item)}
+                        // draggable
+                    >
+                        <Callout style={styles.plainView}>
+                            <View>
+                                <Text>{item.name}</Text>
+                            </View>
+                        </Callout>
+                    </Marker>
+                )
+            })}
+
+        </MapView>
         </View>
-      </ScrollView>
+        <View style={{ flex : 1 }}>
+          <ScrollView>
+            <View style={{padding: 20}}>
+              {agen.map((list) => {
+                return (
+                  <List
+                    nama={list.name}
+                    email={list.email}
+                    phone={list.phone}
+                    selectAgen = {selectAgen ? (list.id == selectAgen.id ? true : false) : false}
+                    select={() =>
+                      // navigation.navigate('CheckOut', {dataAgen: list})
+                      setSelectAgen(list)
+                    }
+                    key={list.id}
+                  />
+                );
+              })}
+              {/* <Text onPress={()=> console.log(enableLocation)} >halo</Text> */}
+            </View>
+          </ScrollView>
+            <View style={{ alignItems : 'center' }} >
+              <ButtonCustom
+                  name = 'Lanjut'
+                  width = '90%'
+                  color = {selectAgen ? colors.btn : colors.disable}
+                  func = {() => selectAgen ? navigation.navigate('Courier', {dataAgen: selectAgen}) : alert('mohon pilih agen dahulu')}
+                  
+              />
+            </View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -206,7 +245,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  body: {
+  body: (select) => ({
     
     padding: 20,
     // borderWidth : 1,
@@ -221,10 +260,11 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 3.0,
-
+    borderWidth :1,
     elevation: 5,
     marginBottom: 10,
-  },
+    backgroundColor : select ? colors.default : '#ffffff'
+  }),
   image: {
     width: 80,
     height: 80,
@@ -274,5 +314,8 @@ const styles = StyleSheet.create({
     borderColor : colors.default, 
     color : colors.default, 
     letterSpacing : 1
-  }
+  },
+     map: {
+        ...StyleSheet.absoluteFillObject,
+      },
 });
