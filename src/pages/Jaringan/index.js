@@ -1,18 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, Image} from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
-import {FlatList, ScrollView, TextInput, TouchableOpacity} from 'react-native-gesture-handler';
-import {ButtonCustom, Header, Header2, HeaderComponent, NotifAlert, Releoder} from '../../component';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import {colors} from '../../utils/colors';
+import Geolocation from '@react-native-community/geolocation';
+import { useIsFocused } from '@react-navigation/native';
 import Axios from 'axios';
-import {useDispatch, useSelector} from 'react-redux';
-import { Rupiah } from '../../helper/Rupiah';
-import { Input } from '../../component/Input';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {profile} from '../../assets';
-import { Alert } from 'react-native';
+import { getDistance } from 'geolib';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, PermissionsAndroid, StyleSheet, Text, View } from 'react-native';
+import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
 import Config from 'react-native-config';
+import { FlatList, ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
+import { profile } from '../../assets';
+import { ButtonCustom, Header2, Releoder } from '../../component';
+import { Input } from '../../component/Input';
+import { Rupiah } from '../../helper/Rupiah';
+import { colors } from '../../utils/colors';
 
 
 const ItemPaket = ({ item, onPress, style }) => (
@@ -61,12 +62,14 @@ const Jaringan = ({navigation}) => {
   const [confirm, setConfirm] = useState(null)
   const [point, setPoint] = useState(0)
   const [harga, setHarga] = useState(0)
-  let isMounted = true
-  var data = [
-    {label: '---', value: null, icon: () => <Icon name="flag" size={18} color="#900" />}
-  ]
+  const isFocused = useIsFocused()
+  const [agen, setAgen] = useState(null);
+  const [enableLocation, setEnableLocation] = useState()
   const [selectAgen,setSelectAgen] = useState(false)
-  const [itemAgen, setItemAgen] = useState(null)
+    var location= {
+      latitude: 0.0000000,
+      longitude: 0.0000000
+  }
   const dateRegister = () => {
     var todayTime = new Date();
     var month = todayTime.getMonth() + 1;
@@ -98,13 +101,84 @@ const Jaringan = ({navigation}) => {
   if(form.address != '' && form.name != '' && form.phone != '' && confirm !='' && form.password != '' && form.email !=''){
     colorbtn = colors.btn
   }
+  // useEffect(() => {
+  //   isMounted = true
+  //   getPaket()
+  //   getAgen()
+  //   getPoint()
+  //   return () => { isMounted = false };
+  // }, [])
+
   useEffect(() => {
-    isMounted = true
-    getPaket()
-    getAgen()
-    getPoint()
-    return () => { isMounted = false };
-  }, [])
+    if(isFocused){
+        getPaket()
+        getPoint()
+      LocationServicesDialogBox.checkLocationServicesIsEnabled({
+          message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
+          ok: "YES",
+          cancel: "NO",
+      }).then(success => {
+        Promise.all([apiAgents(), requestLocationPermission()]).then(res => {
+            let dataAgen=res[0]
+            setAgen(res[0])
+            
+            console.log('1', res[0]);
+            Geolocation.getCurrentPosition( 
+                (position) => {
+                  location.latitude = position.coords.latitude;
+                  location.longitude = position.coords.longitude;
+              // setLoading(false) 
+                  console.log('2');
+                  let arrayAgen = [];
+                  dataAgen.map((item, index) => {
+                    var distance = getDistance(
+                        {latitude: position.coords.latitude, longitude:  position.coords.longitude},
+                        {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
+                        );
+                        arrayAgen[index] = {
+                            id : item.id,
+                            name : item.name,
+                            phone  : item.phone,
+                            email : item.email,
+                            img : item.img, 
+                            distance : distance,
+                            lng : item.lng, 
+                            lat : item.lat
+                        }
+                    })
+                    console.log('asas',arrayAgen.sort(function (a, b) {
+                      return a.distance - b.distance;
+                    }));
+                    // console.log(arrayAgen.sort(compare));
+                    setAgen(arrayAgen.sort(function (a, b) {
+                      return a.distance - b.distance;
+                    }))
+                    setLoading(false)
+              },
+              (error) => {
+                  console.log('3');    
+                  setLoading(false)
+              },
+              { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+              );
+          }).catch(e => {
+            console.log('4', e);
+            setLoading(false)
+          })
+      }).catch(e => {
+        console.log(e.message);
+        apiAgents().then(item => {
+          console.log('5');
+          setAgen(item)
+          setLoading(false)
+        }).catch(e => {
+          console.log('6');
+          setLoading(false)
+        })
+      })
+    
+    }
+  }, [isFocused])
 
   const getPaket = () => {
     Axios.get(Config.API_PACKAGES_MEMBER, 
@@ -123,19 +197,36 @@ const Jaringan = ({navigation}) => {
     });
   }
 
-  const getAgen =() => {
-    Axios.get(Config.API_AGENTS, 
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          'Accept' : 'application/json' 
-        }
-      }
-    ).then((result) => {
-      setItemAgen(result.data)
-      setLoading(false);
-      console.log(data)
-    })
+  // const getAgen =() => {
+  //   Axios.get(Config.API_AGENTS, 
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${TOKEN}`,
+  //         'Accept' : 'application/json' 
+  //       }
+  //     }
+  //   ).then((result) => {
+  //     setItemAgen(result.data)
+  //     setLoading(false);
+  //     console.log(data)
+  //   })
+  // }
+  const apiAgents = () => {
+      // console.log('root path',RootPath);
+      const promise = new Promise ((resolve, reject) => {
+        Axios.get(Config.API_AGENTS, 
+          {
+            headers: {
+              Authorization: `Bearer ${TOKEN}`,
+              'Accept' : 'application/json' 
+            }
+          }).then((result) => {
+                  resolve(result.data);
+          }, (err) => {
+                reject(err);
+          })
+      })
+      return promise;
   }
   const getPoint = () => {
     Axios.get(Config.API_POINT + `${userReducer.id}`, {
@@ -176,6 +267,28 @@ const Jaringan = ({navigation}) => {
     );
   };
   
+  const requestLocationPermission =  async () => {
+    let info ='';
+    try {
+        const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          'title': 'Location Permission',
+          'message': 'MyMapApp needs access to your location'
+        }
+        )
+
+       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          setEnableLocation(true)
+       } else {
+          setEnableLocation(false)
+       }
+    } catch (err) {
+        info=1
+    }
+
+    return enableLocation
+  }
 
 
 
@@ -323,7 +436,7 @@ const Jaringan = ({navigation}) => {
             <Text style={{textAlign : 'center', fontSize : 20}}>Paket dan agen</Text>
             <Text style={[styles.titlelabel , {marginBottom : 5}]} >Pilih Paket</Text>
             <FlatList
-              data={itemAgen}
+              data={agen}
               renderItem={renderItemAgen}
               keyExtractor={(item) => item.id.toString()}
               extraData={selectedId}

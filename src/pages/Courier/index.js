@@ -6,6 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ButtonCustom, Header2, Releoder } from '../../component'
 import Select2 from "react-native-select-two"
 import { colors, renameKey } from '../../utils'
+import { useSelector } from 'react-redux'
+import { Input } from '../../component/Input'
+import { TextInput } from 'react-native-gesture-handler'
 const Courier = ({navigation,route}) => {
     const [provinces, setProvinces] = useState(null)
     const [cities, setCities] = useState(null)
@@ -13,15 +16,18 @@ const Courier = ({navigation,route}) => {
     const [loading, setLoading] = useState(true)
     const [loadingCost, setLoadingCost] = useState(false)
     const isFocused = useIsFocused()
+    const userReducer = useSelector((state) => state.UserReducer);
     const [priceCost, setPriceCost] = useState(0)
     const dataAgen= route.params.dataAgen;
+    const [toggleChangeCity, setToggleChangeCity] = useState(false)
     const [dataOngkir, setDataOngkir] = useState({
         origin : 170, //karangasem,
-        destination : null,   
+        destination : userReducer.city_id,   
         weight : 1000,
         courier : null, 
-        cost : 0
-
+        cost : 0,
+        province :userReducer.province_id,   
+        address : userReducer.address
     });
     const [cost, setCost] = useState([])
     const [courier, setCourier]  = useState([
@@ -30,25 +36,29 @@ const Courier = ({navigation,route}) => {
         {name : 'TIKI', id : 'tiki'}
     ])
     useEffect(() => {
-        locationApi();
-        console.log('data Agen', dataAgen);
+        Promise.all([locationApi()]).then((result) => {
+            result[0].data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
+            result[0].data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
+            setProvinces( result[0].data.province)
+            setOldCities(result[0].data.city)
+            filterCity(userReducer.province_id, result[0].data.city )
+        }).catch(e => {
+            console.log(e);
+        }).finally(f => setLoading(false))
+        locationApi()
     },[])
 
-        useEffect (() => {
+
+    useEffect (() => {
         if(dataOngkir.destination !== null && dataOngkir.origin !=null && dataOngkir.weight !=null &&dataOngkir.courier !=null){
             setLoadingCost(true)
             setCost([])
-            Axios.post('https://api.rajaongkir.com/starter/cost',dataOngkir, {
-                headers : {
-                    'Accept' : 'application/json',
-                    'key' : ' 9ec286006faf2cdb3bd8247af91607a2'
-                }
-            }).then(res => {
-                console.log('cost',res);
+            CostOngkir().then((res) => {
                 let data = [{
                     id : '',
                     name : '',
                     value : '',
+                    service : ''
                 }]
 
                 res.data.rajaongkir.results[0].costs.map((item, index) => {
@@ -56,61 +66,93 @@ const Courier = ({navigation,route}) => {
                         id : index + '-' + item.cost[0].value,
                         name : `${item.service} Rp. ${item.cost[0].value}`,
                         costs : item.cost,
+                        service : item.service,
                         baseId : index + '-'
                     }
                 })
                 console.log(res.data.rajaongkir.results[0].costs);
                 setCost(data)
-            }).catch((e) => {
-                console.log('cost',e.response);
-            }).finally(f => setLoadingCost(false))
+            }).catch(e => {
+                console.log(e);
+            }).finally(f=>setLoading(false))
         }
     },[dataOngkir])
 
+    const CostOngkir = () => {
+        const costPromise = new Promise((resolve, reject) => {
+            Axios.post('https://api.rajaongkir.com/starter/cost',dataOngkir, {
+                headers : {
+                    'Accept' : 'application/json',
+                    'key' : ' 9ec286006faf2cdb3bd8247af91607a2'
+                }
+                }).then(res => {
+                    resolve(res)
+                }).catch((e) => {
+                    console.log('cost',e.response);
+                    reject(e.response)
+                })
+        })
+
+        return costPromise;
+    }
+
     const handleCheckout = () => {
         let price = 0;
+        let service = ''
         cost.map((item,index) => {
             if(item.id == priceCost){
                 price = priceCost.replace(item.baseId, '');
+                service = item.service
             }
         })
 
         let data = dataOngkir;
         data.cost = parseFloat(price);
-        data.courier = dataOngkir.courier.toUpperCase()
-        if(data.courier != null && data.destination !=null && data.origin !=null && data.weight !=null && data.cost !=0){
+        data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() :null
+        data.delivery_service = service
+        if(data.courier != null && data.destination !=null && data.origin !=null && data.weight !=null && data.cost !=0 && (data.address != null && data.address!='') && data.delivery_service !=null){
             navigation.navigate('CheckOut', {dataAgen: dataAgen, dataOngkir : data})
         }else{
             alert('mohon isi data dengan lengkap')
         }
+        
+        console.log(data);
     }
 
     const locationApi = () => {
-        Axios.get('http://adminc.belogherbal.com/api/open/location', {
-          headers : {
-            'Accept' : 'application/json'
-          }
-        }).then((result) => {
-          console.log(result);
-          result.data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
-          result.data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
-          setProvinces( result.data.province)
-          setOldCities(result.data.city)
-        }).catch((e) => {
-          console.log('location', e);
-        }).finally(() => setLoading(false))
-    }
-    
-    const filterCity = (id) => {
-        let data = []
-        oldCities.map((item, index) => {
-            if(item.province_id == id){
-            data[index] = item
-            }
+        const locationPromise = new Promise((resolve, reject) => {
+            Axios.get('http://admin.belogherbal.com/api/open/location', {
+                headers : {
+                    'Accept' : 'application/json'
+                }
+                }).then((result) => {
+                    resolve(result)
+                    }).catch((e) => {
+                        console.log('location', e);
+                        reject(e)
+                    })
         })
 
-        console.log(data);
+        return locationPromise;
+    }
 
+    const filterCity = (id, cities = null) => {
+        console.log('old citsssy', cities);
+        let data = []
+        if(cities == null) {
+            oldCities.map((item, index) => {
+                if(item.province_id == id){
+                data[index] = item
+                }
+            })
+        }else{
+            cities.map((item, index) => {
+                if(item.province_id == id){
+                data[index] = item
+                }
+            })
+        }
+        console.log('data citie new', cities);
         setCities(data)
     }
 
@@ -123,7 +165,7 @@ const Courier = ({navigation,route}) => {
     return (
         <SafeAreaView style={styles.container}>
             <Header2 title ='Layanan Kurir' btn={() => navigation.goBack()}/>
-           <View style={{paddingHorizontal : 20}}>
+            <View style={{paddingHorizontal : 20}}>
                 <View style={{marginVertical : 10}} />
                 <Text>Province</Text>
                 <View style={{marginVertical : 10}} />
@@ -133,15 +175,25 @@ const Courier = ({navigation,route}) => {
                     searchPlaceHolderText='Search Province'
                     colorTheme={colors.default}
                     popupTitle="Select Province"
-                    title="Select Province"
+                    title={userReducer.provinces ? userReducer.provinces.title : "Select Province"}
                     selectButtonText='select'
                     cancelButtonText = 'cancel'
                     data={provinces}
                     onSelect={value => {
                         filterCity(value)
+                        setDataOngkir({
+                            ...dataOngkir,
+                            province : value
+                        })
+                        setToggleChangeCity(true)
                     }}
                     onRemoveItem={value => {
                         filterCity(value)
+                        setDataOngkir({
+                            ...dataOngkir,
+                            province : value
+                        })
+                        setToggleChangeCity(true)
                     }}
                     style={{borderColor : colors.default}}
               />
@@ -155,7 +207,8 @@ const Courier = ({navigation,route}) => {
                         searchPlaceHolderText='Search City'
                         colorTheme={colors.default}
                         popupTitle="Select City"
-                        title="Select City"
+                        // title={userReducer.city ?  (!toggleChangeCity? userReducer.city.title : "Select City") : "Select City"}
+                        title = {!toggleChangeCity ? userReducer.city.title : 'Select City'}
                         selectButtonText='select'
                         cancelButtonText = 'cancel'
                         data={cities ? cities : [{id :null, name :null}]}
@@ -183,7 +236,7 @@ const Courier = ({navigation,route}) => {
                     isSelectSingle
                     style={{ borderRadius: 5 }}
                     colorTheme={colors.default}
-                    searchPlaceHolderText='Search City'
+                    searchPlaceHolderText='Search Courier'
                     popupTitle="Select Courier"
                     title="Select Courier"
                     selectButtonText='select'
@@ -205,6 +258,10 @@ const Courier = ({navigation,route}) => {
                     }}
                     style={{borderColor : colors.default}}
                 />
+                <View style={{marginVertical : 10}} />
+                <Text>Address</Text>
+                <View style={{marginVertical : 10}} />
+                <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => setDataOngkir({...dataOngkir, address : value})} />
                 <View style={{marginVertical : 10}} />
                 <Text>Cost</Text>
                 <View style={{marginVertical : 10}} />
@@ -233,7 +290,7 @@ const Courier = ({navigation,route}) => {
                     color = {colors.btn}
                     func = {handleCheckout}
                 />
-           </View>
+            </View>
         </SafeAreaView>
     )
 }
@@ -244,5 +301,12 @@ const styles = StyleSheet.create({
     container : {
         flex : 1,
         backgroundColor: '#ffffff',
+    },
+    address : {
+        borderWidth : 1,
+        borderColor : colors.default,
+        padding : 10,
+        minHeight : 100,
+        textAlignVertical: 'top' 
     }
 })

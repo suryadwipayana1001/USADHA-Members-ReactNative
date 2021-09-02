@@ -103,6 +103,7 @@ const Profile = ({navigation}) => {
     latitude: 0.00000000,
     longitude: 0.00000000
   })  
+  const [enableLocation, setEnableLocation] = useState()
   let dataUpdate = {
     id : '',
     name : '',
@@ -118,32 +119,30 @@ const Profile = ({navigation}) => {
 
   
   useEffect(() => {
-    // let isMounted = true
     if(isFocused){
-      getPaket()
-      getPoint();
-      getAgen();
-      locationApi();
       setForm(userReducer)
       LocationServicesDialogBox.checkLocationServicesIsEnabled({
         message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
         ok: "YES",
         cancel: "NO",
       }).then(function(success) {
-          requestLocationPermission().then((result) => {
-              Geolocation.getCurrentPosition((position) => {
-                     setLocation({
-                      latitude: position.coords.latitude,
-                      longitude: position.coords.longitude, 
-                    })
-                    setLoading(false)
-                },
-                (error) => {
-                    console.log(error);    
-                    setLoading(false)
-                },
-                    { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
-                );
+          Promise.all([getPaket(),getPoint(),getAgen(),locationApi(), requestLocationPermission()]).then(res => {
+              Geo().then(loc => {
+                  setLocation({
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude, 
+                  })
+                  setLoading(false)
+              }).catch(err => {
+                setLocation({
+                  latitude:0.00000000,
+                  longitude: 0.00000000, 
+                })
+                  Alert.alert('Error', JSON.stringify(err))
+                  setLoading(false)
+              })
+          }).catch((e) => {
+            console.log(e);
           })
       }).catch((error) => {
           console.log(error.message); // error.message => "disabled"
@@ -152,28 +151,43 @@ const Profile = ({navigation}) => {
     }
   }, [isFocused])
 
+  const Geo =() => {
+    const promiseGeo = new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition((position) => {
+          resolve(position)
+      },
+          error => reject(error) ,
+        { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+      );
+    });
+    return promiseGeo
+  }
+
   useEffect(() => {
     filterCity(userReducer.province_id)
   }, [oldCities])
 
   const requestLocationPermission =  async () => {
+    let info ='';
     try {
         const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          'title': 'Location Permission',
-          'message': 'MyMapApp needs access to your location'
-        }
+          {
+            'title': 'Location Permission',
+            'message': 'MyMapApp needs access to your location'
+          }
         )
 
        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-           console.log("Location permission granted")
+          setEnableLocation(true)
        } else {
-           console.log("Location permission denied")
+          setEnableLocation(false)
        }
     } catch (err) {
-       console.warn(err)
+        info=1
     }
+
+    return enableLocation
   }
 
   const locationApi = () => {
