@@ -27,7 +27,7 @@ const Courier = ({navigation,route}) => {
         courier : null, 
         cost : 0,
         province :userReducer.province_id,   
-        address : userReducer.address
+        address : userReducer.address,
     });
     const [cost, setCost] = useState([])
     const [courier, setCourier]  = useState([
@@ -247,7 +247,7 @@ const Courier = ({navigation,route}) => {
                             ...dataOngkir,
                             courier : data[0]
                         })
-                     
+                        console.log(data)
                     }}
                     onRemoveItem={data => {
                         setDataOngkir({

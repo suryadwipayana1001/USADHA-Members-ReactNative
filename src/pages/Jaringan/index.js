@@ -3,10 +3,12 @@ import { useIsFocused } from '@react-navigation/native';
 import Axios from 'axios';
 import { getDistance } from 'geolib';
 import React, { useEffect, useState } from 'react';
+import { Dimensions } from 'react-native';
 import { Alert, Image, PermissionsAndroid, StyleSheet, Text, View } from 'react-native';
 import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
 import Config from 'react-native-config';
 import { FlatList, ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import MapView, { Callout, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { profile } from '../../assets';
@@ -66,10 +68,18 @@ const Jaringan = ({navigation}) => {
   const [agen, setAgen] = useState(null);
   const [enableLocation, setEnableLocation] = useState()
   const [selectAgen,setSelectAgen] = useState(false)
+  const { width, height } = Dimensions.get('window');
+  const ASPECT_RATIO = width / height;
+  const LATITUDE_DELTA = 1.0922;
+  const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+  const LATITUDE = -8.3978769;
+  const LONGITUDE = 115.2141418;
+  const [selectAgenLocation, setSelectAgenLocation] = useState(null)
     var location= {
       latitude: 0.0000000,
       longitude: 0.0000000
   }
+  
   const dateRegister = () => {
     var todayTime = new Date();
     var month = todayTime.getMonth() + 1;
@@ -255,7 +265,7 @@ const Jaringan = ({navigation}) => {
   };
   
   const renderItemAgen = ({ item }) => {
-    const borderColor = item.id === selectedId ? "#ff7b54" : colors.disable;
+    const borderColor = item.id == selectedId ? "#ff7b54" : colors.disable;
 
     return (
       <ItemAgen
@@ -431,57 +441,89 @@ const Jaringan = ({navigation}) => {
       <SafeAreaView style={{backgroundColor : '#ffffff', flex : 1}}>
         <Header2 title ='Paket Downline' btn={() => setSelectPaket(false)}/>
         {selectAgen ? 
-          <View style={{flex:1}}>
-            <View style={{padding : 20, flex : 1}}>
-            <Text style={{textAlign : 'center', fontSize : 20}}>Paket dan agen</Text>
-            <Text style={[styles.titlelabel , {marginBottom : 5}]} >Pilih Paket</Text>
-            <FlatList
-              data={agen}
-              renderItem={renderItemAgen}
-              keyExtractor={(item) => item.id.toString()}
-              extraData={selectedId}
-            /> 
-          </View>
-          <View style={{height : 60, paddingHorizontal : 20}}>
-            <View style={{flexDirection : 'row', justifyContent : 'space-between'}}>
-              <ButtonCustom
-                name='Back Paket'
-                width= 'auto'
-                color= {'red'}
-                func = {() => {setSelectAgen(false); onInputChange('package_id', '')}}
-              />
-              {form.agents_id != '' ? (
+          <View style={{ flex:1 }}>
+              <View style={{ flex : 1, backgroundColor:'red' }} >
+                  <MapView
+                    style={styles.map}
+                    initialRegion={{
+                        latitude: LATITUDE,
+                        longitude: LONGITUDE,
+                        latitudeDelta: LATITUDE_DELTA,
+                        longitudeDelta: LONGITUDE_DELTA,
+                        }}
+                    >
+
+                    {agen && agen.map((item) => {
+                        return (
+                            <Marker
+                                key ={item.id}
+                                coordinate={{latitude : (parseFloat(item.lat) == 0.00000000 ?  location.latitude : parseFloat(item.lat)), longitude:(parseFloat(item.lng) == 0.00000000 ?location.longitude : parseFloat(item.lng))}}
+                                onPress={() => setSelectedId(item.id)}
+                                // draggable
+                            >
+                                <Callout style={styles.plainView}>
+                                    <View>
+                                        <Text>{item.name}</Text>
+                                    </View>
+                                </Callout>
+                            </Marker>
+                        )
+                    })}
+
+                  </MapView>
+              </View>
+              <View style={{flex:1}}>
+                <View style={{padding : 20, flex : 1}}>
+                <Text style={{textAlign : 'center', fontSize : 20}}>Paket dan Agen</Text>
+                <Text style={[styles.titlelabel , {marginBottom : 5}]} >Pilih Agen</Text>
+                <FlatList
+                  data={agen}
+                  renderItem={renderItemAgen}
+                  keyExtractor={(item) => item.id.toString()}
+                  extraData={selectedId}
+                /> 
+              </View>
+              <View style={{height : 60, paddingHorizontal : 20}}>
+                <View style={{flexDirection : 'row', justifyContent : 'space-between'}}>
                   <ButtonCustom
-                    name='Pilih Agen'
-                    width= '65%'
-                    color= {colors.btn}
-                    // func = {() => activasi()}
-                    func = {() => Alert.alert(
-                      'Peringatan',
-                      `Activasi Member ? `,
-                      [
-                            {
-                                  text : 'Tidak',
-                                  onPress : () => console.log('tidak')
-                            },
-                            {
-                                  text : 'Ya',
-                                  onPress : () => {activasi()}
-                            }
-                      ]
-                )}
+                    name='Back Paket'
+                    width= 'auto'
+                    color= {'red'}
+                    func = {() => {setSelectAgen(false); onInputChange('package_id', '')}}
                   />
-                ): (
-                <ButtonCustom
-                  name='Pilih Agen'
-                  width= '65%'
-                  color= {colors.disable}
-                  func = {() => alert('Pilih Agen ')}
-                />
-              )}
+                  {form.agents_id != '' ? (
+                      <ButtonCustom
+                        name='Pilih Agen'
+                        width= '65%'
+                        color= {colors.btn}
+                        // func = {() => activasi()}
+                        func = {() => Alert.alert(
+                          'Peringatan',
+                          `Activasi Member ? `,
+                          [
+                                {
+                                      text : 'Tidak',
+                                      onPress : () => console.log('tidak')
+                                },
+                                {
+                                      text : 'Ya',
+                                      onPress : () => {activasi()}
+                                }
+                          ]
+                    )}
+                      />
+                    ): (
+                    <ButtonCustom
+                      name='Pilih Agen'
+                      width= '65%'
+                      color= {colors.disable}
+                      func = {() => alert('Pilih Agen ')}
+                    />
+                  )}
+                </View>
+              </View>  
             </View>
-          </View>  
-        </View>
+          </View>
         :
         <View style={{flex : 1}}>
           <View style={{padding : 20, flex : 1}}>
@@ -646,6 +688,9 @@ const styles = StyleSheet.create({
   bell: {
     fontSize: 20,
     color: 'white',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   // D:\dev\RNTest\node_modules\@react-native-picker\picker\windows\ReactNativePicker\ReactNativePicker.vcxproj
 });

@@ -80,7 +80,7 @@ const CheckOut = ({navigation, route}) => {
   });
   useEffect(() => {
     isMounted = true
-    orders.ongkir =dataOngkir.cost
+    // orders.ongkir =dataOngkir.cost
     cartState.item.map((cart) => {
       dataCart[dataCart.length] = {
         products_id : cart.id,
@@ -119,38 +119,38 @@ const CheckOut = ({navigation, route}) => {
   const ordersData = () => {
    
     console.log(orders);
-      // if(point >= total){
-      //   setIsLoading(true)
-      //   Axios.post(Config.API_ORDER, orders,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${TOKEN}`,
-      //         'Accept' : 'application/json' ,
-      //         'content-type': 'application/json'
-      //       }
-      //     }
-      //   ).then((result) => {
-      //     if(result.data.success == true ){
-      //       console.log(result.data)
-      //       setOrders(null);
-      //       dispatch(check_out_keranjang());
-      //       // alert('Pesanan anda sedang di buat')
-      //       navigation.navigate('NotifAlert', {notif : 'Pesanan anda Berhasil'})
-      //       setIsLoading(false)
-      //     }else{
-      //       alert('point anda kurang')
-      //     }
-      //     setIsLoading(false)
-      //   }).catch((error) => {
-      //     // alert(' ' + error);
-      //     navigation.navigate('CheckOut')
-      //     alert('pesanan gagal di buat')
-      //     setIsLoading(false)
-      //   });
-      // }else{
-      //   // navigation.navigate('CheckOut')
-      //   alert('point anda kurang');
-      // }
+      if(point >= total){
+        setIsLoading(true)
+        Axios.post(Config.API_ORDER, orders,
+          {
+            headers: {
+              Authorization: `Bearer ${TOKEN}`,
+              'Accept' : 'application/json' ,
+              'content-type': 'application/json'
+            }
+          }
+        ).then((result) => {
+          if(result.data.success == true ){
+            console.log(result.data)
+            setOrders(null);
+            dispatch(check_out_keranjang());
+            // alert('Pesanan anda sedang di buat')
+            navigation.navigate('NotifAlert', {notif : 'Pesanan anda Berhasil'})
+            setIsLoading(false)
+          }else{
+            alert('point anda kurang')
+          }
+          setIsLoading(false)
+        }).catch((error) => {
+          // alert(' ' + error);
+          navigation.navigate('CheckOut')
+          alert('pesanan gagal di buat')
+          setIsLoading(false)
+        });
+      }else{
+        // navigation.navigate('CheckOut')
+        alert('point anda kurang');
+      }
 
    
   };
