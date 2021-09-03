@@ -9,6 +9,7 @@ import { colors, renameKey } from '../../utils'
 import { useSelector } from 'react-redux'
 import { Input } from '../../component/Input'
 import { TextInput } from 'react-native-gesture-handler'
+import Config from 'react-native-config'
 const Courier = ({navigation,route}) => {
     const [provinces, setProvinces] = useState(null)
     const [cities, setCities] = useState(null)
@@ -19,7 +20,9 @@ const Courier = ({navigation,route}) => {
     const userReducer = useSelector((state) => state.UserReducer);
     const [priceCost, setPriceCost] = useState(0)
     const dataAgen= route.params.dataAgen;
+    const typeMenu = route.params.type
     const [toggleChangeCity, setToggleChangeCity] = useState(false)
+    const TOKEN = useSelector((state) => state.TokenApi);
     const [dataOngkir, setDataOngkir] = useState({
         origin : 170, //karangasem,
         destination : userReducer.city_id,   
@@ -96,6 +99,25 @@ const Courier = ({navigation,route}) => {
         return costPromise;
     }
 
+    const handleJaringan = () => {
+        Axios.post(Config.API_REGISTER_DOWNLINE, dataAgen,
+            {
+                headers : {
+                Authorization: `Bearer ${TOKEN}`,
+                'Accept' : 'application/json'
+                }
+            }
+            ).then((res) => {
+                navigation.navigate('NotifAlert', {notif : 'Registrasi Berhasil'})
+                setLoading(false)
+                console.log('jaringan',res.data)
+            }).catch((e) => {
+                var mes = JSON.parse(error.request._response);
+                alert(mes)
+                console.log(e)
+                setLoading(false)
+            })
+    }
     const handleCheckout = () => {
         let price = 0;
         let service = ''
@@ -285,10 +307,10 @@ const Courier = ({navigation,route}) => {
                 /> 
                  <View style={{marginVertical : 10}} />
                 <ButtonCustom
-                    name = 'Lanjut'
+                    name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
                     width = '100%'
                     color = {colors.btn}
-                    func = {handleCheckout}
+                    func = {typeMenu ? (typeMenu == 'Jaringan' ? handleJaringan : handleCheckout) : 'Lanjut'}
                 />
             </View>
         </SafeAreaView>
