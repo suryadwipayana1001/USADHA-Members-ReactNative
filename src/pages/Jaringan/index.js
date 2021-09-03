@@ -97,7 +97,8 @@ const Jaringan = ({navigation}) => {
     address : '',
     ref_id : userReducer.id,
     package_id : '',
-    agents_id : ''
+    agents_id : '',
+    agent : null,
   })
 
   const onInputChange = (input, value) => {
@@ -111,13 +112,6 @@ const Jaringan = ({navigation}) => {
   if(form.address != '' && form.name != '' && form.phone != '' && confirm !='' && form.password != '' && form.email !=''){
     colorbtn = colors.btn
   }
-  // useEffect(() => {
-  //   isMounted = true
-  //   getPaket()
-  //   getAgen()
-  //   getPoint()
-  //   return () => { isMounted = false };
-  // }, [])
 
   useEffect(() => {
     if(isFocused){
@@ -207,20 +201,6 @@ const Jaringan = ({navigation}) => {
     });
   }
 
-  // const getAgen =() => {
-  //   Axios.get(Config.API_AGENTS, 
-  //     {
-  //       headers: {
-  //         Authorization: `Bearer ${TOKEN}`,
-  //         'Accept' : 'application/json' 
-  //       }
-  //     }
-  //   ).then((result) => {
-  //     setItemAgen(result.data)
-  //     setLoading(false);
-  //     console.log(data)
-  //   })
-  // }
   const apiAgents = () => {
       // console.log('root path',RootPath);
       const promise = new Promise ((resolve, reject) => {
@@ -271,7 +251,8 @@ const Jaringan = ({navigation}) => {
       <ItemAgen
         item={item}
         // onPress={() => {setSelectedId(item.id);setPaket(item);}}
-        onPress ={() => { setSelectedId(item.id);onInputChange('agents_id', item.id)}}
+        // onPress ={() => { setSelectedId(item.id);onInputChange('agents_id', item.id)}}
+        onPress ={() => { setSelectedId(item.id);setForm({...form, agents_id : item.id, agent : item})}}
         style={{ borderColor }}
       />
     );
@@ -302,27 +283,42 @@ const Jaringan = ({navigation}) => {
 
 
 
-  const activasi = () => {
-    if(point >= harga ){
+  // const activasi = () => {
+  //   if(point >= harga ){
+  //     setLoading(true)
+  //     if(confirm === form.password){
+  //       Axios.post(Config.API_REGISTER_DOWNLINE, form,
+  //         {
+  //           headers : {
+  //             Authorization: `Bearer ${TOKEN}`,
+  //             'Accept' : 'application/json'
+  //           }
+  //         }
+  //       ).then((res) => {
+  //         navigation.navigate('NotifAlert', {notif : 'Registrasi Berhasil'})
+  //         setLoading(false)
+  //         console.log('jaringan',res.data)
+  //       }).catch((e) => {
+  //         var mes = JSON.parse(error.request._response);
+  //         alert(mes)
+  //         console.log(e)
+  //         setLoading(false)
+  //       })
+  //     }else{
+  //       alert('password tidak sama')
+  //       setLoading(false)
+  //     }
+  //   }else{
+  //     alert('Poin Anda Kurang')
+  //   }
+  //   // setForm(null)
+  // }
+
+  const courier = () => {
+      if(point >= harga ){
       setLoading(true)
       if(confirm === form.password){
-        Axios.post(Config.API_REGISTER_DOWNLINE, form,
-          {
-            headers : {
-              Authorization: `Bearer ${TOKEN}`,
-              'Accept' : 'application/json'
-            }
-          }
-        ).then((res) => {
-          navigation.navigate('NotifAlert', {notif : 'Registrasi Berhasil'})
-          setLoading(false)
-          console.log('jaringan',res.data)
-        }).catch((e) => {
-          var mes = JSON.parse(error.request._response);
-          alert(mes)
-          console.log(e)
-          setLoading(false)
-        })
+        navigation.navigate('Courier', {dataAgen: form, type : 'Jaringan'})
       }else{
         alert('password tidak sama')
         setLoading(false)
@@ -330,7 +326,6 @@ const Jaringan = ({navigation}) => {
     }else{
       alert('Poin Anda Kurang')
     }
-    // setForm(null)
   }
   
   if(loading){
@@ -442,7 +437,7 @@ const Jaringan = ({navigation}) => {
         <Header2 title ='Paket Downline' btn={() => setSelectPaket(false)}/>
         {selectAgen ? 
           <View style={{ flex:1 }}>
-              <View style={{ flex : 1, backgroundColor:'red' }} >
+              <View style={{ flex : 1 }} >
                   <MapView
                     style={styles.map}
                     initialRegion={{
@@ -458,7 +453,7 @@ const Jaringan = ({navigation}) => {
                             <Marker
                                 key ={item.id}
                                 coordinate={{latitude : (parseFloat(item.lat) == 0.00000000 ?  location.latitude : parseFloat(item.lat)), longitude:(parseFloat(item.lng) == 0.00000000 ?location.longitude : parseFloat(item.lng))}}
-                                onPress={() => setSelectedId(item.id)}
+                                onPress={() => {setSelectedId(item.id), onInputChange('agent', item) }}
                                 // draggable
                             >
                                 <Callout style={styles.plainView}>
@@ -507,7 +502,7 @@ const Jaringan = ({navigation}) => {
                                 },
                                 {
                                       text : 'Ya',
-                                      onPress : () => {activasi()}
+                                      onPress : () => {courier()}
                                 }
                           ]
                     )}
