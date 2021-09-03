@@ -3,14 +3,14 @@ import {StyleSheet, Text, View, TextInput} from 'react-native';
 import {color} from 'react-native-reanimated';
 import {colors} from '../../utils/colors';
 
-const Input = ({placeholder, titlelabel, ...rest}) => {
+const Input = ({placeholder, titlelabel, height, ...rest}) => {
   const [selectedValue, setSelectedValue] = useState('java');
   return (
     <View style={styles.containerInput}>
       <Text style={styles.titlelabel}>{titlelabel}</Text>
       <TextInput
         placeholder={placeholder}
-        style={styles.textInput}
+        style={[styles.textInput, {height : height? height : null}]}
         {...rest} //props ...rest digunaka agar props yang di tambhakan pada saat compoent di panggil bisa langsung di pakai
         // onChangeText={(value) => setName(value)}
       />
