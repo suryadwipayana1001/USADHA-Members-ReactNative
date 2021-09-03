@@ -21,10 +21,12 @@ import { Rupiah } from '../../helper/Rupiah';
 import { colors } from '../../utils/colors';
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Callout, Marker } from 'react-native-maps';
 import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
 import { renameKey } from '../../utils';
 import Select2 from 'react-native-select-two';
+import { getDistance } from 'geolib';
+// import { BackHandler } from 'react-native';
 function useForceUpdate() {
   const [refresh, setRefresh] = useState(0); // integer state
   return () => setRefresh((refresh) => ++refresh); // update the state to force render
@@ -93,12 +95,18 @@ const Profile = ({navigation}) => {
   const forceUpdate = useForceUpdate();
   const [item1, setItem1]= useState(null)
   const [selectAgen, setSelectAgen] = useState(false)
-  const [status, setStatus] = useState(form.status)
+  // const [status, setStatus] = useState(form.status)
   const [password, setPassword] = useState(null)
   const [confirmPassword, setConfirmPassword] = useState(null)
   const [provinces, setProvinces] = useState(null)
   const [cities, setCities] = useState(null)
   const [oldCities, setOldCities] = useState(null)
+  const { width, height } = Dimensions.get('window');
+  const ASPECT_RATIO = width / height;
+  const LATITUDE_DELTA = 1.0922;
+  const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+  const LATITUDE = -8.3978769;
+  const LONGITUDE = 115.2141418;
   const [location, setLocation] = useState({
     latitude: 0.00000000,
     longitude: 0.00000000
@@ -120,48 +128,58 @@ const Profile = ({navigation}) => {
   
   useEffect(() => {
     if(isFocused){
+      setLoading(true)
       setForm(userReducer)
       LocationServicesDialogBox.checkLocationServicesIsEnabled({
         message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
         ok: "YES",
         cancel: "NO",
-      }).then(function(success) {
-          Promise.all([getPaket(),getPoint(),getAgen(),locationApi(), requestLocationPermission()]).then(res => {
-              Geo().then(loc => {
-                  setLocation({
-                    latitude: loc.coords.latitude,
-                    longitude: loc.coords.longitude, 
-                  })
-                  setLoading(false)
-              }).catch(err => {
-                setLocation({
-                  latitude:0.00000000,
-                  longitude: 0.00000000, 
-                })
-                  Alert.alert('Error', JSON.stringify(err))
-                  setLoading(false)
-              })
+      }).then(function(result) {
+          console.log('1');
+          Promise.all([apiAgents(),getPaket(),getPoint(),locationApi(), requestLocationPermission()]).then(res => {
+           
+              setItemAGen(res[0]);
+              let dataAgen=res[0]
+              Geolocation.getCurrentPosition((position) => {
+                    setLocation({
+                      latitude: position.coords.latitude,
+                      longitude: position.coords.longitude, 
+                    })
+                    // console.log('location', position);
+                    // setLoading(false)
+                    let arrayAgen = [];
+                    dataAgen.map((item, index) => {
+                        var distance = getDistance(
+                        {latitude: position.coords.latitude, longitude:  position.coords.longitude},
+                        {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
+                        );
+                        arrayAgen.push(item)
+                        arrayAgen[index].distance = distance
+                    })
+                    setItemAGen(arrayAgen.sort(function (a, b) {
+                      return a.distance - b.distance;
+                    }))
+                    setLoading(false)
+                  },
+                  error =>{
+                    Alert.alert('Error', JSON.stringify(error))
+                    setLoading(false)
+                  } ,
+                { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+              );
           }).catch((e) => {
             console.log(e);
+            console.log('4');
+            setLoading(false)
           })
       }).catch((error) => {
           console.log(error.message); // error.message => "disabled"
+          // setLoading(false)
+          console.log('5');
           setLoading(false)
       })
     }
   }, [isFocused])
-
-  const Geo =() => {
-    const promiseGeo = new Promise((resolve, reject) => {
-      Geolocation.getCurrentPosition((position) => {
-          resolve(position)
-      },
-          error => reject(error) ,
-        { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
-      );
-    });
-    return promiseGeo
-  }
 
   useEffect(() => {
     filterCity(userReducer.province_id)
@@ -203,7 +221,7 @@ const Profile = ({navigation}) => {
       setOldCities(result.data.city)
     }).catch((e) => {
       console.log('location', e);
-    }).finally(() => setLoading(false))
+    })
   }
 
   const filterCity = (id) => {
@@ -233,31 +251,29 @@ const Profile = ({navigation}) => {
       getPoint()
     }).catch((error) => {
       alert('koneksi error, mohon buka ulang aplikasinya')
-      BackHandler.exitApp()
+      console.log(error);
+      // BackHandler.exitApp()
     });
   }
 
-  const getAgen =() => {
-    Axios.get(Config.API_AGENTS, 
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          'Accept' : 'application/json' 
-        }
-      }
-    ).then((result) => {
-      // result.data.map((data, index) => {
-      //   data1[data1.length] = {
-      //     label: data.name,
-      //     value: data.id,
-      //     icon: () => <Icon name="user" size={18} color="#900" />,
-      //   };
-      // });
-      // setAgen(data1)
-      setItemAGen(result.data);
-      setLoading(false);
+  
+  const apiAgents = () => {
+    // console.log('root path',RootPath);
+    const promise = new Promise ((resolve, reject) => {
+      Axios.get(Config.API_AGENTS, 
+        {
+          headers: {
+            Authorization: `Bearer ${TOKEN}`,
+            'Accept' : 'application/json' 
+          }
+        }).then((result) => {
+                resolve(result.data);
+        }, (err) => {
+              reject(err);
+        })
     })
-  }
+    return promise;
+}
 
   const onInputChange = (input, value) => {
     setForm({
@@ -337,62 +353,36 @@ const Profile = ({navigation}) => {
       setPoint(parseInt(result.data.data[0].balance_points))
       setPointUpgrade(parseInt(result.data.data[0].balance_upgrade_points))
       setPointSaving(parseInt(result.data.data[0].balance_saving_points))
-      getAgen()
-    }).catch(() => {
+      // getAgen()
+    }).catch((e) => {
       alert('koneksi error, mohon buka ulang aplikasinya')
-      BackHandler.exitApp()
+      console.log(e);
+      // BackHandler.exitApp()
     })
   }
   const activasi = () => {
     setLoading(true)
-    if(paket !=null){
-      if(agen !=null){
-        if(point < parseInt(paket.price)){
-          setLoading(false)
-          alert('Point Anda Kurang silahkan Top Up dulu')
-        }else{
-          var dataActivasi = {
-            id : form.id,
-            package_id : paket.id,
-            agents_id : agen.id
-          }
-          console.log(dataActivasi)
-          Axios.post(Config.API_ACTIVE, dataActivasi,
-            {
-              headers: {
-                Authorization: `Bearer ${TOKEN}`,
-                'Accept' : 'application/json' 
-              }
-            }
-          ).then((result) => {
-            alert('sukses activasi member')
-            // forceUpdate();
-            const dataUser = {
-              ...form,
-              status : 'active'
-            }
-            storeDataUser(dataUser)
-            dispatch({type : 'SET_DATA_USER', value:dataUser}); 
-            setForm(dataUser)
-            setLoading(false)
-            setStatus('active')
-            navigation.navigate('NotifAlert', {notif : 'Sukses Activasi Member'})
-          }).catch((error) => {
-            // console.log(error.request._response.message);
-            var mes = JSON.parse(error.request._response);
-            alert(mes.message)
-            setLoading(false)
-          });
-        }
-      }else{
-        setLoading(false)
-        alert('mohon pilih agen yang anda inginkan')
-      }
-    }else{
-      setLoading(false)
-      alert('pilih paket yang anda inginkan dahulu')
-    }
-    // setStatus('active')
+    // if(paket !=null){
+    //   if(agen !=null){
+    //     if(point < parseInt(paket.price)){
+    //       setLoading(false)
+    //       alert('Point Anda Kurang silahkan Top Up dulu')
+    //     }else{
+          var dataActivasi = agen;
+          dataActivasi.id = form.id;
+          dataActivasi.package_id = paket.id;
+          dataActivasi.agents_id = agen.id;
+          dataActivasi.weight = paket.weight
+          navigation.navigate('Courier', {dataAgen: dataActivasi, type : 'Activasi'})
+    //     }
+    //   }else{
+    //     setLoading(false)
+    //     alert('mohon pilih agen yang anda inginkan')
+    //   }
+    // }else{
+    //   setLoading(false)
+    //   alert('pilih paket yang anda inginkan dahulu')
+    // }
   }
 
 
@@ -442,44 +432,77 @@ const Profile = ({navigation}) => {
     <View style={styles.container}>
        <HeaderComponent/>
       <View style={styles.body}>
-        <View style={styles.info}>
+        {/* <View style={styles.info}>
           <Text style={styles.label}>Nama  :</Text>
           <Text style={styles.isi}>{form.name}</Text>
         </View>
         <View style={styles.info}>
           <Text style={styles.label}>Email   :</Text>
           <Text style={styles.isi}>{form.email}</Text>
-        </View>
+        </View> */}
 
         {selectAgen ? 
           <View style={styles.bodyItem}>
-            <FlatList
-              style={{width: '100%'}}
-              nestedScrollEnabled
-              data={['']}
-              keyExtractor={(data) => data}
-              renderItem={({item, index}) => {
-                switch (index) {
-                  case 0:
+            <View style={{ flex : 1 }}>
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                    latitude: LATITUDE,
+                    longitude: LONGITUDE,
+                    latitudeDelta: LATITUDE_DELTA,
+                    longitudeDelta: LONGITUDE_DELTA,
+                    }}
+                >
+
+                {itemAgen && itemAgen.map((item) => {
                     return (
-                      <View>
-                        <Text style={styles.pilihPaket} >Pilih Agen</Text>
-                        <FlatList
-                          data={itemAgen}
-                          renderItem={renderItemAgen}
-                          keyExtractor={(item) => item.id.toString()}
-                          extraData={selectedId}
-                        />
-                        {/* <TouchableOpacity style={styles.borderLogin} onPress = {() => activasi()} >
-                          <Text style={styles.textBtnLogin}>Activasi Sekarang</Text>
-                        </TouchableOpacity> */}
-                      </View>
-                    );
-                  default:
-                    return null;
-                }
-              }}
-            />
+                        <Marker
+                            key ={item.id}
+                            coordinate={{latitude : (parseFloat(item.lat) == 0.00000000 ?  location.latitude : parseFloat(item.lat)), longitude:(parseFloat(item.lng) == 0.00000000 ?location.longitude : parseFloat(item.lng))}}
+                            onPress={() => {setSelectedId(item.id); setAgen(item) }}
+                            // draggable
+                        >
+                            <Callout style={styles.plainView}>
+                                <View>
+                                    <Text>{item.name}</Text>
+                                </View>
+                            </Callout>
+                        </Marker>
+                    )
+                })}
+
+              </MapView>
+            </View>
+            <View style={{ flex : 1 }}>
+              <FlatList
+                style={{width: '100%'}}
+                nestedScrollEnabled
+                data={['']}
+                keyExtractor={(data) => data}
+                renderItem={({item, index}) => {
+                  switch (index) {
+                    case 0:
+                      return (
+                        <View>
+                          <Text style={styles.pilihPaket} >Pilih Agen</Text>
+                          <FlatList
+                            data={itemAgen}
+                            renderItem={renderItemAgen}
+                            keyExtractor={(item) => item.id.toString()}
+                            extraData={selectedId}
+                          />
+                          {/* <TouchableOpacity style={styles.borderLogin} onPress = {() => activasi()} >
+                            <Text style={styles.textBtnLogin}>Activasi Sekarang</Text>
+                          </TouchableOpacity> */}
+                        </View>
+                      );
+                    default:
+                      return null;
+                  }
+                }}
+              />
+            </View>
+     
               <View style={{ marginTop : 10, marginBottom:30, flexDirection : 'row', justifyContent:'space-between'}}>
                 <ButtonCustom
                   name = 'Back Paket'
@@ -767,6 +790,7 @@ const Profile = ({navigation}) => {
               </View>
 
               <View style={{marginTop:40}}>
+                {location && 
                 <MapView
                     style={styles.map}
                     //  provider={PROVIDER_GOOGLE}
@@ -790,6 +814,7 @@ const Profile = ({navigation}) => {
                     >
                     </Marker>
                 </MapView>
+                }
             </View>
           </View>
         </ScrollView>
@@ -843,13 +868,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   body : {
-    paddingHorizontal : 20,
+    // paddingHorizontal : 20,
     backgroundColor : '#ffffff',
     flex : 1,
     // marginBottom : 10
   },
   bodyItem : {
-    // paddingHorizontal : 20,
+    paddingHorizontal : 20,
     backgroundColor : '#ffffff',
     flex : 1,
     // marginBottom : 10

@@ -68,16 +68,18 @@ const Agen = ({navigation}) => {
                             {latitude: position.coords.latitude, longitude:  position.coords.longitude},
                             {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
                             );
-                            arrayAgen[index] = {
-                                id : item.id,
-                                name : item.name,
-                                phone  : item.phone,
-                                email : item.email,
-                                img : item.img, 
-                                distance : distance,
-                                lng : item.lng, 
-                                lat : item.lat
-                            }
+                            // arrayAgen[index] = {
+                            //     id : item.id,
+                            //     name : item.name,
+                            //     phone  : item.phone,
+                            //     email : item.email,
+                            //     img : item.img, 
+                            //     distance : distance,
+                            //     lng : item.lng, 
+                            //     lat : item.lat
+                            // }
+                            arrayAgen.push(item)
+                            arrayAgen[index].distance = distance
                         })
                         console.log('asas',arrayAgen.sort(function (a, b) {
                           return a.distance - b.distance;
@@ -228,7 +230,7 @@ const Agen = ({navigation}) => {
                   name = 'Lanjut'
                   width = '90%'
                   color = {selectAgen ? colors.btn : colors.disable}
-                  func = {() => selectAgen ? navigation.navigate('Courier', {dataAgen: selectAgen}) : alert('mohon pilih agen dahulu')}
+                  func = {() => selectAgen ? navigation.navigate('Courier', {dataAgen: selectAgen, type : 'Checkout'}) : alert('mohon pilih agen dahulu')}
                   
               />
             </View>

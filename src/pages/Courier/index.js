@@ -6,10 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ButtonCustom, Header2, Releoder } from '../../component'
 import Select2 from "react-native-select-two"
 import { colors, renameKey } from '../../utils'
-import { useSelector } from 'react-redux'
 import { Input } from '../../component/Input'
 import { TextInput } from 'react-native-gesture-handler'
 import Config from 'react-native-config'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useDispatch, useSelector } from 'react-redux';
+
+
 const Courier = ({navigation,route}) => {
     const [provinces, setProvinces] = useState(null)
     const [cities, setCities] = useState(null)
@@ -24,32 +27,47 @@ const Courier = ({navigation,route}) => {
     const [toggleChangeCity, setToggleChangeCity] = useState(false)
     const TOKEN = useSelector((state) => state.TokenApi);
     const [dataOngkir, setDataOngkir] = useState({
-        origin : 170, //karangasem,
+        origin :typeMenu=='Jaringan' ?  dataAgen.agent.city_id :  dataAgen.city_id, //karangasem,
         destination : userReducer.city_id,   
-        weight : 1000,
+        weight : 0,
         courier : null, 
         cost : 0,
         province :userReducer.province_id,   
         address : userReducer.address,
     });
+    const dispatch = useDispatch();  
     const [cost, setCost] = useState([])
-    const [courier, setCourier]  = useState([
+    const [courier, setCourier] = useState([
         {name : 'JNE', id : 'jne'},
         {name : 'POS', id : 'pos'},
         {name : 'TIKI', id : 'tiki'}
     ])
+    const cartReducer = useSelector((state) => state.CartReducer);
+
+
+
     useEffect(() => {
-        Promise.all([locationApi()]).then((result) => {
+        // alert('refresh')
+        // console.log('data', dataAgen);
+        console.log(dataAgen);
+        Promise.all([locationApi(), totalWeight()]).then((result) => {
             result[0].data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
             result[0].data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
             setProvinces( result[0].data.province)
             setOldCities(result[0].data.city)
+            setDataOngkir({...dataOngkir, weight : result[1]})
             filterCity(userReducer.province_id, result[0].data.city )
         }).catch(e => {
             console.log(e);
         }).finally(f => setLoading(false))
-        locationApi()
+        if(typeMenu =='Jaringan' ? !dataAgen.agent.city_id : !dataAgen.city_id){
+            alert('Agen Belum Memiliki lokasi yang pasti mohon pilih agen lain')
+            // navigation.navigate('Dashboard')
+        }
+        // locationApi()
     },[])
+
+
 
 
     useEffect (() => {
@@ -81,6 +99,25 @@ const Courier = ({navigation,route}) => {
         }
     },[dataOngkir])
 
+
+    const totalWeight = () => {
+        if(typeMenu == 'Checkout'){
+            const promiseWeight = new Promise((resolve, reject) => {
+                let total = 0
+                cartReducer.item.map((item) => {
+                    total = total + (item.qty * item.weight);
+                })
+                resolve(total)
+                reject(0)
+            })
+
+            return promiseWeight;
+        }else {
+            // setDataOngkir({...dataOngkir, weight : dataAgen.weight})
+            return dataAgen.weight
+        }
+    }
+
     const CostOngkir = () => {
         const costPromise = new Promise((resolve, reject) => {
             Axios.post('https://api.rajaongkir.com/starter/cost',dataOngkir, {
@@ -100,7 +137,21 @@ const Courier = ({navigation,route}) => {
     }
 
     const handleJaringan = () => {
-        Axios.post(Config.API_REGISTER_DOWNLINE, dataAgen,
+        let price = 0;
+        let service = ''
+        cost.map((item,index) => {
+            if(item.id == priceCost){
+                price = priceCost.replace(item.baseId, '');
+                service = item.service
+            }
+        })
+
+        let data = dataOngkir;
+        data.cost = parseFloat(price);
+        data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() :null
+        data.delivery_service = service
+        if(data.courier != null && data.destination !=null && data.origin !=null && data.weight !=null && data.cost !=0 && (data.address != null && data.address!='') && data.delivery_service !=null){
+            Axios.post(Config.API_REGISTER_DOWNLINE, dataAgen,
             {
                 headers : {
                 Authorization: `Bearer ${TOKEN}`,
@@ -116,8 +167,12 @@ const Courier = ({navigation,route}) => {
                 alert(mes)
                 console.log(e)
                 setLoading(false)
-            })
+            }).finally(f => setLoading(false))
+        }else{
+            alert('mohon isi data dengan lengkap')
+        }
     }
+
     const handleCheckout = () => {
         let price = 0;
         let service = ''
@@ -141,6 +196,47 @@ const Courier = ({navigation,route}) => {
         console.log(data);
     }
 
+    const handleActivasi = () => {
+        let price = 0;
+        let service = ''
+        cost.map((item,index) => {
+            if(item.id == priceCost){
+                price = priceCost.replace(item.baseId, '');
+                service = item.service
+            }
+        })
+
+        let data = dataOngkir;
+        data.cost = parseFloat(price);
+        data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() :null
+        data.delivery_service = service
+        if(data.courier != null && data.destination !=null && data.origin !=null && data.weight !=null && data.cost !=0 && (data.address != null && data.address!='') && data.delivery_service !=null){
+            setLoading(true)
+            Axios.post(Config.API_ACTIVE, dataAgen,
+                {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                        'Accept' : 'application/json' 
+                    }
+                }
+            ).then((result) => {
+                console.log('result data',result);
+                storeDataUser(result.data.data)
+                dispatch({type : 'SET_DATA_USER', value:result.data.data}); 
+                setLoading(false)
+                navigation.navigate('NotifAlert', {notif : 'Sukses Activasi Member'})
+            }).catch((error) => {
+                // console.log(error.request._response.message);
+                var mes = JSON.parse(error.request._response);
+                alert(mes.message)
+                setLoading(false)
+            });
+        }else{
+            alert('mohon isi data dengan lengkap')
+        }
+    }
+    
+
     const locationApi = () => {
         const locationPromise = new Promise((resolve, reject) => {
             Axios.get('http://admin.belogherbal.com/api/open/location', {
@@ -159,7 +255,7 @@ const Courier = ({navigation,route}) => {
     }
 
     const filterCity = (id, cities = null) => {
-        console.log('old citsssy', cities);
+        // console.log('old citsssy', cities);
         let data = []
         if(cities == null) {
             oldCities.map((item, index) => {
@@ -174,8 +270,17 @@ const Courier = ({navigation,route}) => {
                 }
             })
         }
-        console.log('data citie new', cities);
+        // console.log('data citie new', cities);
         setCities(data)
+    }
+
+    const storeDataUser = async (value) => {
+        try {
+          const jsonValue = JSON.stringify(value)
+          await AsyncStorage.setItem('@LocalUser', jsonValue)
+        } catch (e) {
+          console.log('Token not Save')
+        }
     }
 
     if(loading){
@@ -285,6 +390,8 @@ const Courier = ({navigation,route}) => {
                 <View style={{marginVertical : 10}} />
                 <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => setDataOngkir({...dataOngkir, address : value})} />
                 <View style={{marginVertical : 10}} />
+                <Text>Total berat {dataOngkir.weight} (gram)</Text>
+                <View style={{marginVertical : 10}} />
                 <Text>Cost</Text>
                 <View style={{marginVertical : 10}} />
                 <Select2
@@ -306,12 +413,38 @@ const Courier = ({navigation,route}) => {
                     style={{borderColor : colors.default}}
                 /> 
                  <View style={{marginVertical : 10}} />
-                <ButtonCustom
-                    name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
+                {/* <ButtonCustom
+                    // name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
+                    name = {typeMenu ? (typeMenu =='Jaringan' ? 'Jaringan' : 'Activasi') : 'Chekout'}
                     width = '100%'
                     color = {colors.btn}
-                    func = {typeMenu ? (typeMenu == 'Jaringan' ? handleJaringan : handleCheckout) : 'Lanjut'}
-                />
+                    func = {typeMenu ? (typeMenu =='Jaringan' ? handleJaringan : handleActivasi) : handleCheckout}
+                /> */}
+                {typeMenu == 'Jaringan' &&
+                    <ButtonCustom
+                        // name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
+                        name = 'Ragistrasi Downline'
+                        width = '100%'
+                        color = {colors.btn}
+                        func = {handleJaringan}
+                    />
+                }
+                {typeMenu == 'Activasi' &&
+                    <ButtonCustom
+                        name = 'Activasi'
+                        width = '100%'
+                        color = {colors.btn}
+                        func = {handleActivasi}
+                    />
+                }
+                {typeMenu == 'Checkout' &&
+                    <ButtonCustom
+                        name = 'Checkout'
+                        width = '100%'
+                        color = {colors.btn}
+                        func = {handleCheckout}
+                    />
+                }
             </View>
         </SafeAreaView>
     )
