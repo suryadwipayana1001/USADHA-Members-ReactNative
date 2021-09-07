@@ -61,11 +61,12 @@ const DetailProduct = ({navigation, route}) => {
     qty: null,
     note: '',
     status: '',
+    weight : '',
   };
   
   const insertCart = () => {
         if(userReducer.status === 'active'){
-              item.id= product.id
+            item.id= product.id
             item.namaProduct= product.name
             item.harga= parseInt(product.price)
             item.selected= false
@@ -73,6 +74,7 @@ const DetailProduct = ({navigation, route}) => {
             item.note= ''
             item.img = product.img
             item.status= 'pending'
+            item.weight = parseFloat(product.weight)
 
         
           // mencari data jika ada yang sama di keranjang

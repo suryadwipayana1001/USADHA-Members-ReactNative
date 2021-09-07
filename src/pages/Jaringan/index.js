@@ -99,6 +99,7 @@ const Jaringan = ({navigation}) => {
     package_id : '',
     agents_id : '',
     agent : null,
+    weight : 0
   })
 
   const onInputChange = (input, value) => {
@@ -135,25 +136,13 @@ const Jaringan = ({navigation}) => {
                   console.log('2');
                   let arrayAgen = [];
                   dataAgen.map((item, index) => {
-                    var distance = getDistance(
-                        {latitude: position.coords.latitude, longitude:  position.coords.longitude},
-                        {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
-                        );
-                        arrayAgen[index] = {
-                            id : item.id,
-                            name : item.name,
-                            phone  : item.phone,
-                            email : item.email,
-                            img : item.img, 
-                            distance : distance,
-                            lng : item.lng, 
-                            lat : item.lat
-                        }
-                    })
-                    console.log('asas',arrayAgen.sort(function (a, b) {
-                      return a.distance - b.distance;
-                    }));
-                    // console.log(arrayAgen.sort(compare));
+                      var distance = getDistance(
+                      {latitude: position.coords.latitude, longitude:  position.coords.longitude},
+                      {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
+                      );
+                      arrayAgen.push(item)
+                      arrayAgen[index].distance = distance
+                  })
                     setAgen(arrayAgen.sort(function (a, b) {
                       return a.distance - b.distance;
                     }))
@@ -238,7 +227,8 @@ const Jaringan = ({navigation}) => {
       <ItemPaket
         item={item}
         // onPress={() => {setSelectedId(item.id);setPaket(item);}}
-        onPress ={() => {onInputChange('package_id', item.id); setSelectedId(item.id); setHarga(parseInt(item.price))}}
+        // onPress ={() => {onInputChange('package_id', item.id); setSelectedId(item.id); setHarga(parseInt(item.price))}}
+        onPress ={() => {setForm({...form, package_id : item.id, weight : parseFloat(item.weight)}); setSelectedId(item.id); setHarga(parseInt(item.price))}}
         style={{ borderColor }}
       />
     );
@@ -280,40 +270,7 @@ const Jaringan = ({navigation}) => {
 
     return enableLocation
   }
-
-
-
-  // const activasi = () => {
-  //   if(point >= harga ){
-  //     setLoading(true)
-  //     if(confirm === form.password){
-  //       Axios.post(Config.API_REGISTER_DOWNLINE, form,
-  //         {
-  //           headers : {
-  //             Authorization: `Bearer ${TOKEN}`,
-  //             'Accept' : 'application/json'
-  //           }
-  //         }
-  //       ).then((res) => {
-  //         navigation.navigate('NotifAlert', {notif : 'Registrasi Berhasil'})
-  //         setLoading(false)
-  //         console.log('jaringan',res.data)
-  //       }).catch((e) => {
-  //         var mes = JSON.parse(error.request._response);
-  //         alert(mes)
-  //         console.log(e)
-  //         setLoading(false)
-  //       })
-  //     }else{
-  //       alert('password tidak sama')
-  //       setLoading(false)
-  //     }
-  //   }else{
-  //     alert('Poin Anda Kurang')
-  //   }
-  //   // setForm(null)
-  // }
-
+  
   const courier = () => {
       if(point >= harga ){
       setLoading(true)
