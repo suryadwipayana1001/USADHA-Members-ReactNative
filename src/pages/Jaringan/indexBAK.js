@@ -17,7 +17,6 @@ import { Rupiah } from '../../helper/Rupiah';
 import { colors } from '../../utils/colors';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Geolocation from 'react-native-geolocation-service';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 const ItemPaket = ({ item, onPress, style }) => (
   <View style={{marginBottom : 10}}>
@@ -98,7 +97,6 @@ const Jaringan = ({navigation}) => {
     email : '',
     address : '',
     ref_id : userReducer.id,
-    sponsor_id : userReducer.id,
     package_id : '',
     agents_id : '',
     agent : null,
@@ -117,63 +115,84 @@ const Jaringan = ({navigation}) => {
     colorbtn = colors.btn
   }
 
-   useEffect(() => {
-    if(isFocused){                  
-      LocationServicesDialogBox.checkLocationServicesIsEnabled({
-          message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
-          ok: "YES",
-          cancel: "NO",
-      }).then(success => {
-        Promise.all([apiAgents(), requestLocationPermission(), getPaket(), getPoint(), getMember()]).then(res => {
-          console.log('memberr',member)  
-          let dataAgen=res[0]
-            setAgen(res[0])
+  useEffect(() => {
+    // setUserSelect(null)
+    setLoading(true)
+    Axios.get(Config.API_MEMBER_TREE + '?ref_id=169'  , {
+      headers : {
+        Authorization: `Bearer ${TOKEN}`,
+        'Accept' : 'application/json' 
+      }
+    })
+    .then((result) => {
+      // console.log('data point api', result.data)
+     
+      // setMember(data1);
+      console.log('data point api', data1)
+      setLoading(false);    
+    }).catch((error) => {
+      console.log('error qui' + JSON.stringify(error));
+      setLoading(false);
+    });
+  }, [])
+
+  //  useEffect(() => {
+  //   if(isFocused){                  
+  //     LocationServicesDialogBox.checkLocationServicesIsEnabled({
+  //         message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
+  //         ok: "YES",
+  //         cancel: "NO",
+  //     }).then(success => {
+  //       Promise.all([apiAgents(), requestLocationPermission(), getPaket(), getPoint(), getMember()]).then(res => {
+  //         console.log('memberr',member)  
+  //         let dataAgen=res[0]
+  //           setAgen(res[0])
             
-            // console.log('1', res[0]);
-            Geolocation.getCurrentPosition( 
-                (position) => {
-                  location.latitude = position.coords.latitude;
-                  location.longitude = position.coords.longitude;
-              // setLoading(false) 
-                  // console.log('2');
-                  let arrayAgen = [];
-                  dataAgen.map((item, index) => {
-                      var distance = getDistance(
-                      {latitude: position.coords.latitude, longitude:  position.coords.longitude},
-                      {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
-                      );
-                      arrayAgen.push(item)
-                      arrayAgen[index].distance = distance
-                  })
-                    setAgen(arrayAgen.sort(function (a, b) {
-                      return a.distance - b.distance;
-                    }))
-                    setLoading(false)
-              },
-              (error) => {
-                  // console.log('3');    
-                  setLoading(false)
-              },
-              { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
-              );
-          }).catch(e => {
-            // console.log('4', e);
-            setLoading(false)
-          })
-      }).catch(e => {
-        console.log(e.message);
-        apiAgents().then(item => {
-          // console.log('5');
-          setAgen(item)
-          setLoading(false)
-        }).catch(e => {
-          // console.log('6');
-          setLoading(false)
-        })
-      })
+  //           // console.log('1', res[0]);
+  //           Geolocation.getCurrentPosition( 
+  //               (position) => {
+  //                 location.latitude = position.coords.latitude;
+  //                 location.longitude = position.coords.longitude;
+  //             // setLoading(false) 
+  //                 // console.log('2');
+  //                 let arrayAgen = [];
+  //                 dataAgen.map((item, index) => {
+  //                     var distance = getDistance(
+  //                     {latitude: position.coords.latitude, longitude:  position.coords.longitude},
+  //                     {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
+  //                     );
+  //                     arrayAgen.push(item)
+  //                     arrayAgen[index].distance = distance
+  //                 })
+  //                   setAgen(arrayAgen.sort(function (a, b) {
+  //                     return a.distance - b.distance;
+  //                   }))
+  //                   setLoading(false)
+  //             },
+  //             (error) => {
+  //                 // console.log('3');    
+  //                 setLoading(false)
+  //             },
+  //             { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+  //             );
+  //         }).catch(e => {
+  //           // console.log('4', e);
+  //           setLoading(false)
+  //         })
+  //     }).catch(e => {
+  //       console.log(e.message);
+  //       apiAgents().then(item => {
+  //         // console.log('5');
+  //         setAgen(item)
+  //         setLoading(false)
+  //       }).catch(e => {
+  //         // console.log('6');
+  //         setLoading(false)
+  //       })
+  //     })
     
-    }
-  }, [isFocused])
+  //   }
+  // }, [isFocused])
 
   const getPaket = () => {
     Axios.get(Config.API_PACKAGES_MEMBER, 
@@ -225,7 +244,7 @@ const Jaringan = ({navigation}) => {
   const getMember = () => {
     // setUserSelect(null)
     setLoading(true)
-    Axios.get(Config.API_MEMBER_TREE + '?ref_id=' + userReducer.id  , {
+    Axios.get(Config.API_MEMBER_TREE + '?ref_id=169'  , {
       headers : {
         Authorization: `Bearer ${TOKEN}`,
         'Accept' : 'application/json' 
@@ -233,19 +252,19 @@ const Jaringan = ({navigation}) => {
     })
     .then((result) => {
       // console.log('data point api', result.data)
-      let data1 = [];
-      result.data.data.map((data, index) => {
+      let data1
+      result.data.map((data, index) => {
         data1[index] = {
-          label: data.name + ' - ' + data.code,
+          label: data.name + ' - ' + data.id,
           value: data.id,
           icon: () => <Icon name="user" size={18} color="#900" />,
         };
       });
-      setMember(data1);
+      // setMember(data1);
       console.log('data point api', data1)
       setLoading(false);    
     }).catch((error) => {
-      console.log('error' + error);
+      console.log('error ' + error.response);
       setLoading(false);
     });
   } 
@@ -333,7 +352,7 @@ const Jaringan = ({navigation}) => {
                     <Text style={styles.textLogin}> ayo buruan gabung </Text>
                   </View> */}
                   <DropDownPicker
-            placeholder = 'Select Referal/Sponsor'
+            placeholder = 'Select Member'
             searchable={true}
             searchablePlaceholder="Search referal"
             searchablePlaceholderTextColor="gray"
@@ -355,7 +374,7 @@ const Jaringan = ({navigation}) => {
             }}
             
             dropDownStyle={{backgroundColor: '#fafafa'}}
-            onChangeItem={(item) => onInputChange('ref_id', item.value)}
+            onChangeItem={(item) => setUserTujuan(item.value)}
           />
                   
                   <Input

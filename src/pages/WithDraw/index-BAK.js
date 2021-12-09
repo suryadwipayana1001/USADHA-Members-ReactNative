@@ -34,6 +34,7 @@ const ItemBank = ({item, onPress, style}) => (
 
 const WithDraw = ({navigation}) => {
 
+      const [bank, setBank] = useState('')
       const [rekening, setRekening] = useState('')
       const [selectedId, setSelectedId] = useState(null);
       const [selectedBank, setSelectedBank] = useState(null);
@@ -58,28 +59,36 @@ const WithDraw = ({navigation}) => {
                   value : 'BCA'
             }
       ])
-      const [points, setPoints] = useState([])
-      
-      const handleChecked = (index, value) => {
-            let temp_state = [...points];
-            let temp_element = { ...temp_state[index] };
-            temp_element.status = value;
-            temp_state[index] = temp_element;
-	      setPoints(temp_state);
-          };
+      const [selectedBalance, setSelectedBalance] = useState(true);
+      const [pointBalance, setpointBalance] = useState(0);
+      const [selectedFee, setSelectedFee] = useState(true);
+      const [pointFee, setpointFee] = useState(0);
+      const [selectedSaving, setSelectedSaving] = useState(true);
+      const [pointSaving, setpointSaving] = useState(0);
 
       const checkAll = (a,b,c) => {
-            //map
             let total=0;
-            points.map((item, index) => {
-                  let statestatus = item.status
-                  if(a==item.id){
-                        statestatus =false
-                  }
-                  if(statestatus==true || (a==item.id && b==true)){
-                  total += parseInt(item.balance);
-                  }
-                })
+            let statusBalance=selectedBalance
+            let statusFee=selectedFee
+            let statusSaving=selectedSaving
+            if(a==1){
+                  statusBalance=false
+            }
+            if(a==2){
+                  statusFee=false
+            }
+            if(a==3){
+                  statusSaving=false
+            }
+            if (statusBalance === true || (a==1 && b==true)) {
+              total = total + pointBalance;
+            }
+            if (statusFee === true || (a==2 && b==true)){
+                  total = total + pointFee;
+            }
+            if (statusSaving === true || (a==3 && b==true)){
+                  total = total + pointSaving;
+            }
             setPoint(parseInt(total))
           };
       
@@ -135,54 +144,56 @@ const WithDraw = ({navigation}) => {
             amount : nominal,
             bank_name : selectedBank,
             bank_acc_no : rekening,
-            points : points,
+            selectedBalance : selectedBalance,
+            selectedFee : selectedFee,
+            selectedSaving : selectedSaving,
       }
         
       const actionWithDraw = () => {
-            // console.log('dataWithDraw',dataWithDraw)
-            setIsLoading(true)
-            Axios.post(Config.API_WITHDRAW, dataWithDraw,
-                  {
-                        headers: {
-                              Authorization: `Bearer ${TOKEN}`,
-                              'Accept' : 'application/json' 
-                        }
-                  }
-            ).then((res) => {
-                  console.log(res)
-                  // alert(res.data.message)
-                  navigation.navigate('NotifAlert', {notif : res.data.message})
-                  setModalVisible(false)
-                  setIsLoading(false)
-            }).catch((e) => {
-                  var mes = JSON.parse(e.request._response);
-                  alert(mes.message)
-                  setIsLoading(false)
-            })
+            // if(nominal <= )
+            console.log('dataWithDraw',dataWithDraw)
+            // setIsLoading(true)
+            // Axios.post(Config.API_WITHDRAW, dataWithDraw,
+            //       {
+            //             headers: {
+            //                   Authorization: `Bearer ${TOKEN}`,
+            //                   'Accept' : 'application/json' 
+            //             }
+            //       }
+            // ).then((res) => {
+            //       console.log(res.data.message)
+            //       // alert(res.data.message)
+            //       navigation.navigate('NotifAlert', {notif : res.data.message})
+            //       setModalVisible(false)
+            //       setIsLoading(false)
+            // }).catch((e) => {
+            //       var mes = JSON.parse(e.request._response);
+            //       alert(mes.message)
+            //       setIsLoading(false)
+            // })
       }
 
 
-      useEffect(() => {
-            Axios.get(Config.API_POINT_BALANCE + '?customer_id=' + `${userReducer.id}` + '&status_fld=withdraw', {
+      const getPoint = () => {
+            Axios.get(Config.API_POINT + `${userReducer.id}`, {
                   headers : {
                     Authorization: `Bearer ${TOKEN}`,
                     'Accept' : 'application/json' 
                   }
             })
             .then((result) => {
-                  // console.log('data point api', result)
-                  let arrayPoints = [];
-                  let totalPoint = 0
-                  result.data.map((item, index) => {
-                        let objPoint = {id:item.id,status:true,balance:item.balance,name:item.name}
-                        arrayPoints.push(objPoint)
-                        totalPoint += parseInt(item.balance)
-                      })
-                  // console.log('arrayPoints', arrayPoints)
-                  setPoints(arrayPoints)
-                  setPoint(parseInt(totalPoint))
+                  // console.log('data point api', result.data.data[0].balance_points)
+                  setpointBalance(parseInt(result.data.data[0].balance_points))
+                  setpointFee(parseInt(result.data.data[0].fee_points))
+                  setpointSaving(parseInt(result.data.data[0].balance_saving_points))
+                  setPoint(parseInt(result.data.data[0].balance_points)+parseInt(result.data.data[0].fee_points)+parseInt(result.data.data[0].balance_saving_points))
                   setIsLoading(false)
+                  // setIsLoading(false)
             });
+      }
+
+      useEffect(() => {
+            getPoint()
       }, [])
 
 
@@ -269,20 +280,30 @@ const WithDraw = ({navigation}) => {
                   </View>
             </Modal>
                   <Header2 title ='Withdraw' btn={() => navigation.goBack()}/>
-                              {points && points.map((item,index) => {
-                              return(
-                              <View style={styles.checkboxContainer}>
+                  <View style={styles.checkboxContainer}>
                                     <CheckBox
-                                    value={item.status}
-                                    onValueChange={(status) => checkAll(item.id,status,handleChecked(index,status))}
+                                    value={selectedBalance}
+                                    onValueChange={(selectedBalance) => checkAll(1,selectedBalance,setSelectedBalance(selectedBalance))}
                                     style={styles.checkbox}
                                     />
-                                    <Text style={styles.checkboxLabel}>{item.name} ({Rupiah(item.balance)})</Text>
+                                    <Text style={styles.checkboxLabel}>Saldo Poin Belanja ({Rupiah(pointBalance)})</Text>
                               </View>
-                              )})}
-                              {/* <TouchableOpacity onPress={() => {console.log('jkk',points)}}>
-                                    <Icon name='times' size={20}/>
-                              </TouchableOpacity> */}
+                              <View style={styles.checkboxContainer}>
+                                    <CheckBox
+                                    value={selectedFee}
+                                    onValueChange={(selectedFee) => checkAll(2,selectedFee,setSelectedFee(selectedFee))}
+                                    style={styles.checkbox}
+                                    />
+                                    <Text style={styles.checkboxLabel}>Saldo Poin Komisi ({Rupiah(pointFee)})</Text>
+                              </View>
+                              <View style={styles.checkboxContainer}>
+                                    <CheckBox
+                                    value={selectedSaving}
+                                    onValueChange={(selectedSaving) => checkAll(3,selectedSaving,setSelectedSaving(selectedSaving))}
+                                    style={styles.checkbox}
+                                    />
+                                    <Text style={styles.checkboxLabel}>Saldo Poin Tabungan ({Rupiah(pointSaving)})</Text>
+                              </View>
                               <View style={{maxWidth : '100%', marginLeft : 20, marginTop : 20, marginBottom : 20, flexDirection:'row'}}>
               <Text style={{flex:2}}>Total Saldo Poin :</Text>
               <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(point)}</Text>

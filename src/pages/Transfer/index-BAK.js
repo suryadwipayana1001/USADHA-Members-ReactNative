@@ -72,7 +72,7 @@ const Transfer = ({ navigation, route }) => {
             }
           }
         ).then((result) => {
-          setTransferTo(result.data.data.name + ' - ' + result.data.data.code)
+          setUserSelect(result.data.data.id)
           setUserTujuan(result.data.data.id)
           setIsLoading(false)
           console.log('id', result.data.data.id)
@@ -106,8 +106,34 @@ const Transfer = ({ navigation, route }) => {
   }
 
   const getMember = () => {
+    setUserSelect(null)
     setIsLoading(true)
+    let data1 = []
+    data1[0] = {
+      label: '',
+      value: '',
+      icon: () => <Icon name="user" size={18} color="#900" />,
+    };
+    setMember(data1);
     selectScanMember()
+    // Axios.get(Config.API_MEMBER + `?page=1` , {
+    //   headers : {
+    //     Authorization: `Bearer ${TOKEN}`,
+    //     'Accept' : 'application/json' 
+    //   }
+    // })
+    // .then((result) => {
+    //   console.log('data point api', result)
+    //   result.data.data.data.map((data, index) => {
+    //     data1[index] = {
+    //       label: data.name + ' - ' + data.code,
+    //       value: data.id,
+    //       icon: () => <Icon name="user" size={18} color="#900" />,
+    //     };
+    //   });
+    //   setMember(data1);
+    //   selectScanMember()
+    // });
   }
 
   const Transfer = () => {
@@ -231,15 +257,39 @@ const Transfer = ({ navigation, route }) => {
         <View style={{ padding: 20 }}>
           {/* {console.log('data yang di render', item1)} */}
           <View style={{ flexDirection: 'row' }}>
-            <TextInput editable={false} placeholder='Member yang dituju' style={styles.search} value={transferTo} onChangeText={(item) => setTransferTo(item)} ></TextInput>
-            <ButtonCustom
-              name='Cari'
-              width='40%'
-              color={colors.btn}
-              func={() => { navigation.navigate('Members') }}
-            />
-          </View>
+          <TextInput style={styles.search} value={transferTo} onChangeText={(item) => setTransferTo(item)} ></TextInput>
+          <ButtonCustom
+            name='Pilih'
+            width='20%'
+            color={colors.btn}
+            func={() => { navigation.navigate('Members') }}
+          />
+        </View>
+          <DropDownPicker
+            placeholder='Select Member'
+            searchable={true}
+            searchablePlaceholder="Search users"
+            searchablePlaceholderTextColor="gray"
+            seachableStyle={{}}
+            dropDownMaxHeight='85%'
+            searchableError={() => <Text>Not Found</Text>}
+            items={
+              member
+            }
+            defaultValue={userSelect != null ? userSelect : ''}
+            containerStyle={{ height: 60 }}
+            style={{
+              borderBottomWidth: 1,
+              borderBottomColor: colors.disable,
+              fontSize: 15,
+            }}
+            itemStyle={{
+              justifyContent: 'flex-start',
+            }}
 
+            dropDownStyle={{ backgroundColor: '#fafafa' }}
+            onChangeItem={(item) => setUserTujuan(item.value)}
+          />
           <Text style={{ marginTop: 40, color: '#bbbbbb' }}>Sumber dana</Text>
           <View
             style={{
@@ -258,7 +308,7 @@ const Transfer = ({ navigation, route }) => {
               style={{ marginRight: 20 }}
             />
             <View>
-              <Text style={{ fontWeight: 'bold' }}>Poin Belanja</Text>
+              <Text style={{ fontWeight: 'bold' }}>Minyak Belog Cash</Text>
               <Text style={{ color: colors.dark }}>
                 Saldo {Rupiah(point)}
               </Text>
@@ -290,7 +340,7 @@ const Transfer = ({ navigation, route }) => {
           alignItems: 'center',
           justifyContent: 'center',
           // color : nominalTransfer
-        }}>
+        }}>        
         {isNaN(nominalTransfer.toString()) ? setNominalTransfer(0) : (nominalTransfer != 0 && userTujuan !== null ? (
           nominalTransfer <= point ? (
             <ButtonCustom
@@ -300,7 +350,7 @@ const Transfer = ({ navigation, route }) => {
               // func = {() => {generateCodeOTP(); setModalVisible(true)}}
               func={() => Alert.alert(
                 'Peringatan',
-                `Anda akan melakukan Transfer ke ${transferTo} ? `,
+                `Anda akan melakukan Transfer ? `,
                 [
                   {
                     text: 'Tidak',

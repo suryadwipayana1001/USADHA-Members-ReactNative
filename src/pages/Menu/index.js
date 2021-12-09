@@ -81,6 +81,14 @@ const Menu = ({navigation}) => {
             />
           </View>
           <View style={styles.menu}>
+            <Text style={styles.titleMenu}>Konversi</Text>
+            <SubMenu 
+              titleMenu="Konversi" 
+              icon="forward" 
+              navigasi={() => navigation.navigate('Convert')}
+            />
+          </View>
+          <View style={styles.menu}>
             <Text style={styles.titleMenu}>Info Bank</Text>
             <SubMenu 
               titleMenu="Info Bank" 

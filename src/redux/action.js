@@ -1,3 +1,33 @@
+export const add_to_package = (value, count) => {
+  return {type: 'ADD_TO_PACKAGE', valueItem: value, count: count};
+};
+
+export const change_to_package_qty = (value, id, harga, typeOperator) => {
+  return {
+    type: 'CHANGE_TO_PACKAGE_QTY',
+    valueItem: value,
+    id: id,
+    harga: harga,
+    typeOperator: typeOperator,
+  };
+};
+
+export const delete_package = (id = null) => {
+  return {type: 'DELETE_PACKAGE', id: id};
+};
+
+export const delete_package_all = () => {
+  return {type: 'DELETE_PACKAGE_All'};
+};
+
+export const selected_package = (id = null, value) => {
+  return {type: 'SELECTED_PACKAGE', id: id, value: value};
+};
+
+export const check_out_package = () => {
+  return {type: 'CHECK_OUT_PACKAGE'};
+};
+
 export const add_to_cart = (value, count) => {
   return {type: 'ADD_TO_CART', valueItem: value, count: count};
 };

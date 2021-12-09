@@ -1,33 +1,41 @@
 {
   "project_info": {
-    "project_number": "177793800504",
-    "project_id": "authphone-2e855",
-    "storage_bucket": "authphone-2e855.appspot.com"
+    "project_number": "207343500212",
+    "project_id": "belog-herbal",
+    "storage_bucket": "belog-herbal.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:177793800504:android:9fbbc304c08715cb4b89cd",
+        "mobilesdk_app_id": "1:207343500212:android:f7d2e6b486230d986f90e1",
         "android_client_info": {
           "package_name": "com.minyakbelog"
         }
       },
       "oauth_client": [
         {
-          "client_id": "177793800504-qr4sfk7p0a5ibtvla17ji0ud0c4ffqu9.apps.googleusercontent.com",
+          "client_id": "207343500212-fu08sqenr3qtgs3ik8lh9fqbfrud7hjo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.minyakbelog",
+            "certificate_hash": "6e6477484cefc934892b4083cb373fc913225ff8"
+          }
+        },
+        {
+          "client_id": "207343500212-2r4ntfsp1g8uf32mckb5ehbh21fp1m8k.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCJAjjSMLy4Zrv9H4gLvzEG6xPjOc2cnLY"
+          "current_key": "AIzaSyBuKwSEaOM6V2GzC9UaynYK_kza3onnvbg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "177793800504-qr4sfk7p0a5ibtvla17ji0ud0c4ffqu9.apps.googleusercontent.com",
+              "client_id": "207343500212-2r4ntfsp1g8uf32mckb5ehbh21fp1m8k.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

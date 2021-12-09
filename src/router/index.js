@@ -34,7 +34,14 @@ import {
   LogNotif,
   UpgradeType,
   Tree,
-  Courier
+  Courier,
+  Pay,
+  Geocoding,
+  HistoryFee,
+  Members,
+  Convert,
+  Package,
+  Products,
 } from '../pages';
 import {ButtomNavigator, NotifAlert} from '../component';
 
@@ -134,6 +141,11 @@ const Router = () => {
         component={HistoryPoint}
         options={{headerShown: false}}  
       />
+      <Stack.Screen
+        name="HistoryFee"
+        component={HistoryFee}
+        options={{headerShown: false}}  
+      />
        <Stack.Screen
         name="HistoryOrder"
         component={HistoryOrder}
@@ -213,6 +225,36 @@ const Router = () => {
         name="Courier"
         component={Courier}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Pay"
+        component={Pay}
+        options={{headerShown: false}}
+      />
+       <Stack.Screen
+        name="Geocoding"
+        component={Geocoding}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Members"
+        component={Members}
+        options={{headerShown: false}}  
+      />
+      <Stack.Screen
+        name="Convert"
+        component={Convert}
+        options={{headerShown: false}}  
+      />
+      <Stack.Screen
+        name="Package"
+        component={Package}
+        options={{headerShown: false}}  
+      />
+      <Stack.Screen
+        name="Products"
+        component={Products}
+        options={{headerShown: false}}  
       />
     </Stack.Navigator>
   );

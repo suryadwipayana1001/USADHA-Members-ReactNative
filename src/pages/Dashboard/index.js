@@ -24,6 +24,7 @@ import {
 } from '../../assets';
 import Config from "react-native-config";
 import { BackHandler } from 'react-native';
+import { Geocoding } from '..';
 const wait = (timeout) => {
   return new Promise(resolve => {
     setTimeout(resolve, timeout);
@@ -88,7 +89,7 @@ const Dashboard = ({navigation}) => {
   };
 
   const getPoint = () => {
-    Axios.get(Config.API_POINT + userReducer.id, {
+    Axios.get(Config.API_POINT_TOTAL  + '?customer_id=' + `${userReducer.id}`, {
       headers : {
         Authorization: `Bearer ${TOKEN}`,
         // cancelToken : source.token,
@@ -97,7 +98,7 @@ const Dashboard = ({navigation}) => {
     })
     .then((result) => {
       // console.log('data point api', result.data.data[0].balance_points)
-      setPoint(parseInt(result.data.data[0].balance_points))
+      setPoint(parseInt(result.data))
       countNotifBadge();
     }).catch(() => {
       alert('koneksi error, mohon buka ulang aplikasinya')
@@ -145,7 +146,7 @@ const Dashboard = ({navigation}) => {
         }
       >
         <View style={styles.contentHeader}>
-          <Text style={styles.textRp}>Saldo Poin </Text>
+          <Text style={styles.textRp}>Saldo Poin</Text>
           <Text style={styles.textRp}>{Rupiah(point)}</Text>
           <View style={{position:'absolute', alignItems : 'center', justifyContent : 'center', width : '100%', marginLeft: 20}}>
             {userReducer.img == null || userReducer.img == '' ?  
@@ -187,6 +188,9 @@ const Dashboard = ({navigation}) => {
             />
           </View>
         </View>
+
+        <TouchableOpacity style={{width : '50%', backgroundColor : '#ffffff', height : 300, padding : 5, marginBottom : 5,}} onPress ={() => navigation.navigate('Package')}><Text style={styles.textlihatPromo}> Go to Package</Text></TouchableOpacity>
+
         {/* content --header */}
         <View style={styles.line}/>
         <View style={styles.promo}>

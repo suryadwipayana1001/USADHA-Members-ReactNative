@@ -32,7 +32,7 @@ const ItemBank = ({item, onPress, style}) => (
       </TouchableOpacity>
 );
 
-const WithDraw = ({navigation}) => {
+const Convert = ({navigation}) => {
 
       const [rekening, setRekening] = useState('')
       const [selectedId, setSelectedId] = useState(null);
@@ -129,7 +129,7 @@ const WithDraw = ({navigation}) => {
             return year + "-" + month + "-" + day;
       }
 
-      let dataWithDraw = {
+      let dataConvert = {
             register : dateRegister(),
             customers_id : userReducer.id,
             amount : nominal,
@@ -138,10 +138,10 @@ const WithDraw = ({navigation}) => {
             points : points,
       }
         
-      const actionWithDraw = () => {
-            // console.log('dataWithDraw',dataWithDraw)
+      const actionConvert = () => {
+            // console.log('dataConvert',dataConvert)
             setIsLoading(true)
-            Axios.post(Config.API_WITHDRAW, dataWithDraw,
+            Axios.post(Config.API_CONVERT, dataConvert,
                   {
                         headers: {
                               Authorization: `Bearer ${TOKEN}`,
@@ -163,7 +163,7 @@ const WithDraw = ({navigation}) => {
 
 
       useEffect(() => {
-            Axios.get(Config.API_POINT_BALANCE + '?customer_id=' + `${userReducer.id}` + '&status_fld=withdraw', {
+            Axios.get(Config.API_POINT_BALANCE + '?customer_id=' + `${userReducer.id}` + '&status_fld=convertion', {
                   headers : {
                     Authorization: `Bearer ${TOKEN}`,
                     'Accept' : 'application/json' 
@@ -217,7 +217,7 @@ const WithDraw = ({navigation}) => {
             // console.log(code)
             console.log(codeOTP)
             if(code === codeOTP){
-                actionWithDraw()
+                actionConvert()
             }else{
                   alert('OTP SALAH')
             }
@@ -268,7 +268,7 @@ const WithDraw = ({navigation}) => {
                         </View>
                   </View>
             </Modal>
-                  <Header2 title ='Withdraw' btn={() => navigation.goBack()}/>
+                  <Header2 title ='Konversi ke Poin Belanja' btn={() => navigation.goBack()}/>
                               {points && points.map((item,index) => {
                               return(
                               <View style={styles.checkboxContainer}>
@@ -295,25 +295,10 @@ const WithDraw = ({navigation}) => {
                               keyExtractor={(data) => data}
                               renderItem={({item, index}) => {
                                     switch (index) {
-                                    case 0:
-                                    return (
-                                          <View style={styles.infoTopUp}>
-                                                <View style={styles.boxPilihBank}>
-                                                      <Text style={styles.txtPilihBank}>No Rek</Text>
-                                                      <TextInput 
-                                                            style={styles.inputRek}
-                                                            placeholder = 'no rekening bank'
-                                                            value = {rekening}
-                                                            keyboardType='number-pad'
-                                                            onChangeText = {(item) => setRekening (item)}
-                                                      />
-                                                </View>
-                                          </View>
-                                    );
-                                    case 1 : 
+                                    case 0:                                    
                                     return (
                                     <View style={styles.infoTopUp}>
-                                          <Text style={styles.txtNominal}>Pilih Nominal Withdraw</Text>
+                                          <Text style={styles.txtNominal}>Pilih Nominal Convert</Text>
 
                                           <View style={styles.boxBtnTambahKartuAtm}>
                                                 <FlatList
@@ -341,26 +326,7 @@ const WithDraw = ({navigation}) => {
                                                 }}
                                           />
                                     </View>
-                                    );
-                                    case 2: 
-                                    return (
-                                          <View style={styles.contentTransfer}>
-                                                <Text style={styles.textTransferBank}>Transfer Bank</Text>
-                                                <View style={styles.boxBtnTambahKartuAtm}>
-                                                <FlatList
-                                                      data={listBank}
-                                                      renderItem={renderListBank}
-                                                      keyExtractor={(item) => item.id}
-                                                      extraData={selectedBank}
-                                                      numColumns={2}
-                                                      contentContainerStyle={{
-                                                      flexGrow: 1,
-                                                      alignItems: 'center',
-                                                      }}
-                                                />
-                                                </View>
-                                          </View>
-                                    );
+                                    );                                    
                                     default:
                                     return null;
                                     }
@@ -369,18 +335,18 @@ const WithDraw = ({navigation}) => {
                   </View>
                   <View style={{height : 60, paddingHorizontal : 20}}>
                         <View style={styles.footer}>
-                              {nominal != 0 && selectedBank != null && rekening !=''? (
+                              {nominal != 0? (
                                     nominal <= point ? (
-                                          // <TouchableOpacity style={[styles.btnWithDraw]} onPress={() => {generateCodeOTP(); setModalVisible(true)}}>
+                                          // <TouchableOpacity style={[styles.btnConvert]} onPress={() => {generateCodeOTP(); setModalVisible(true)}}>
                                           //       <Text style={styles.txtBtnDraw}>With Draw Now</Text>
                                           // </TouchableOpacity>
                                           <ButtonCustom
-                                                name = 'Withdraw Now'
+                                                name = 'Convert Now'
                                                 width = '100%'
                                                 color = {colors.btn}
                                                 func = {() => Alert.alert(
                                                       'Peringatan',
-                                                      `Witdraw sekarang ? `,
+                                                      `Convert sekarang ? `,
                                                       [
                                                             {
                                                                   text : 'Tidak',
@@ -388,15 +354,15 @@ const WithDraw = ({navigation}) => {
                                                             },
                                                             {
                                                                   text : 'Ya',
-                                                                  onPress : () => {Config.OTP == 1 ? generateCodeOTP() : actionWithDraw()}
-                                                                  // onPress :() => actionWithDraw()
+                                                                  onPress : () => {Config.OTP == 1 ? generateCodeOTP() : actionConvert()}
+                                                                  // onPress :() => actionConvert()
                                                             }
                                                       ]
                                                 )}
                                           />
                                     ):(
                                           <ButtonCustom
-                                                name = 'Withdraw'
+                                                name = 'Convert'
                                                 width ='100%'
                                                 color= {colors.disable}
                                                 func ={() => {alert('Poin Anda Kurang')}}
@@ -404,7 +370,7 @@ const WithDraw = ({navigation}) => {
                                     )
                               ) : (
                                     <ButtonCustom
-                                          name = 'Withdraw'
+                                          name = 'Convert'
                                           width ='100%'
                                           color= {colors.disable}
                                           func ={() => {alert('Data Anda Tidak Lengkap')}}
@@ -416,7 +382,7 @@ const WithDraw = ({navigation}) => {
       )
 }
 
-export default WithDraw
+export default Convert
 
 const styles = StyleSheet.create({
       checkboxContainer: {
@@ -504,7 +470,7 @@ const styles = StyleSheet.create({
             marginBottom: 10,
             padding: 10,
       },
-      btnWithDraw : {
+      btnConvert : {
             borderWidth : 1,
             padding: 10,
             borderRadius : 10,

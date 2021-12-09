@@ -1,4 +1,4 @@
-import Geolocation from '@react-native-community/geolocation';
+import Geolocation from 'react-native-geolocation-service';
 import { useIsFocused } from '@react-navigation/native';
 import Axios from 'axios';
 import { getDistance } from 'geolib';
@@ -60,6 +60,7 @@ const Agen = ({navigation}) => {
                     (position) => {
                       location.latitude = position.coords.latitude;
                       location.longitude = position.coords.longitude;
+                      // alert(position.coords.latitude)
                   // setLoading(false) 
                       console.log('2');
                       let arrayAgen = [];
@@ -230,7 +231,7 @@ const Agen = ({navigation}) => {
                   name = 'Lanjut'
                   width = '90%'
                   color = {selectAgen ? colors.btn : colors.disable}
-                  func = {() => selectAgen ? navigation.navigate('Courier', {dataAgen: selectAgen, type : 'Checkout'}) : alert('mohon pilih agen dahulu')}
+                  func = {() => {selectAgen ? navigation.navigate('Courier', {dataAgen: selectAgen, type : 'Checkout'}) :alert('mohon pilih agen lain')}}
                   
               />
             </View>

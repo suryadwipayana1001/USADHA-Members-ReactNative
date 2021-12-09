@@ -19,7 +19,6 @@ import { ButtonCustom, HeaderComponent, Releoder } from '../../component';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import { Rupiah } from '../../helper/Rupiah';
 import { colors } from '../../utils/colors';
-import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
 import LocationServicesDialogBox from "react-native-android-location-services-dialog-box";
@@ -87,6 +86,7 @@ const Profile = ({navigation}) => {
   const [point, setPoint] = useState (0)
   const [pointUpgrade, setPointUpgrade] = useState (0)
   const [pointSaving, setPointSaving] = useState (0)
+  const [pointFee, setPointFee] = useState (0)
   const [selectedId, setSelectedId] = useState(null);
   const isFocused = useIsFocused();
   const [agen,setAgen] = useState()
@@ -209,12 +209,12 @@ const Profile = ({navigation}) => {
   }
 
   const locationApi = () => {
-    Axios.get('http://adminc.belogherbal.com/api/open/location', {
+    Axios.get('http://admin.belogherbal.com/api/open/location', {
       headers : {
         'Accept' : 'application/json'
       }
     }).then((result) => {
-      // console.log(result);
+      // console.log('API Location',result);
       result.data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
       result.data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
       setProvinces( result.data.province)
@@ -353,6 +353,7 @@ const Profile = ({navigation}) => {
       setPoint(parseInt(result.data.data[0].balance_points))
       setPointUpgrade(parseInt(result.data.data[0].balance_upgrade_points))
       setPointSaving(parseInt(result.data.data[0].balance_saving_points))
+      setPointFee(parseInt(result.data.data[0].fee_points))
       // getAgen()
     }).catch((e) => {
       alert('koneksi error, mohon buka ulang aplikasinya')
@@ -631,6 +632,11 @@ const Profile = ({navigation}) => {
             <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
               <Text style={{flex:2}}>Poin Tabungan :</Text>
               <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointSaving)}</Text>
+            </View>
+
+            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
+              <Text style={{flex:2}}>Poin Komisi :</Text>
+              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointFee)}</Text>
             </View>
 
             <Text style={{fontSize: 18, fontWeight: 'bold'}}>Edit Profile</Text>

@@ -16,6 +16,7 @@ import History from './History';
 import Agen from './Agen';
 import Api from './Api';
 import HistoryPoint from './HistoryPoint';
+import HistoryFee from './HistoryFee';
 import HistoryOrder from './HistoryOrder';
 import HistoryOrderDetail from './HistoryOrderDetail';
 import OTP from './Otp';
@@ -30,6 +31,12 @@ import LogNotif from './LogNotif';
 import UpgradeType from './UpgradeType';
 import Tree from './Tree'
 import Courier from './Courier'
+import Pay from './TopUp/pay';
+import Geocoding from './Geocoding';
+import Members from './Members';
+import Convert from './Convert';
+import Package from './Package';
+import Products from './Products';
 export {
   Product,
   Profile,
@@ -49,6 +56,7 @@ export {
   Agen,
   Api,
   HistoryPoint,
+  HistoryFee,
   HistoryOrder,
   HistoryOrderDetail,
   OTP,
@@ -62,5 +70,11 @@ export {
   LogNotif,
   UpgradeType,
   Tree,
-  Courier
+  Courier, 
+  Pay,
+  Geocoding,
+  Members,
+  Convert,
+  Package,
+  Products,
 };

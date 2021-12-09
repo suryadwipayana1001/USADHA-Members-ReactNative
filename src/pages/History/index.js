@@ -18,6 +18,16 @@ const History = ({navigation}) => {
         />
       </View>
       <View style={styles.menu}>
+        <Text style={styles.titleMenu}>History Komisi</Text>
+        <SubMenu
+          titleMenu="Mutasi Komisi"
+          icon="dollar-sign"
+          color='#16c79a'
+          style={styles.subMenu}
+          navigasi={() => navigation.navigate('HistoryFee')}
+        />
+      </View>
+      <View style={styles.menu}>
         <Text style={styles.titleMenu}>History Order Keluar</Text>
         <SubMenu 
           titleMenu="History Order Keluar" 
