@@ -7,10 +7,10 @@ import { colors } from '../../utils/colors';
 import { useIsFocused } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper';
 import {
-  change_to_qty,
-  delete_cart,
-  delete_cart_all,
-  selected_cart,
+  change_to_package_qty,
+  delete_package,
+  delete_package_all,
+  selected_package,
 } from '../../redux';
 import { useSelector, useDispatch } from 'react-redux';
 import { Rupiah } from '../../helper/Rupiah';
@@ -22,7 +22,7 @@ function useForceUpdate() {
   return () => setRefresh((refresh) => ++refresh); // update the state to force render
 }
 
-const Keranjang = ({ navigation }) => {
+const Package = ({ navigation, route }) => {
   const [isSelected, setIsSelected] = useState(false);
   const cartReducer = useSelector((state) => state.PackageReducer);
   const isFocused = useIsFocused();
@@ -37,8 +37,14 @@ const Keranjang = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const TOKEN = useSelector((state) => state.TokenApi);
   const [bvmin, setBvmin] = useState(0);
+  const dataForm = route.params.dataForm;
+  const dataType = route.params.dataType;
+  const [activationType, setActivationType] = useState(1);
 
   useEffect(() => {
+    console.log('cartReducer', cartReducer)
+    console.log('dataForm', dataForm)
+    console.log('dataType', dataType)
     if (isFocused) {
       setIsLoading(true)
       setTotal(cartState.total);
@@ -49,8 +55,9 @@ const Keranjang = ({ navigation }) => {
     }
   }, [isFocused, cartState]);
 
-  const checkBvmin = (a,c) => {
+  const checkBvmin = (a, b, c) => {
     setBvmin(a)
+    setActivationType(b)
   };
 
   const getData = async () => {
@@ -72,7 +79,7 @@ const Keranjang = ({ navigation }) => {
           }
         }).then((result) => {
           resolve(result.data.data);
-          console.log('API_ACTIVATION_TYPE',result.data.data)
+          console.log('API_ACTIVATION_TYPE', result.data.data)
         }, (err) => {
           reject(err);
         })
@@ -80,24 +87,34 @@ const Keranjang = ({ navigation }) => {
     return promise;
   }
 
-  const quantity = (harga, type, cart) => {
+  const quantity = (harga, bvv, weight, type, cart) => {
+    console.log('cartReducer cqty', cartReducer)
     if (type === 'MIN') {
-      if (cart.qty !== 0) {
-        setTotal(cartReducer.total - harga);
-        if (total <= 0) {
-          setTotal(0);
-        }
-        setBv(cartReducer.bv - harga);
-        if (bv <= 0) {
-          setBv(0);
-        }
+      let totale = cartReducer.total - harga
+      setTotal(totale);
+      if (totale <= 0) {
+        setTotal(0);
+      }
+      let bve = cartReducer.bv - bvv
+      setBv(bve);
+      if (bve <= 0) {
+        setBv(0);
       }
     } else if (type === 'PLUSH') {
-      setTotal(total + harga);
-      setBv(bv + bv);
+      let totale = cartReducer.total + harga
+      setTotal(totale);
+      if (totale <= 0) {
+        setTotal(0);
+      }
+      let bve = cartReducer.bv + bvv
+      setBv(bve);
+      if (bve <= 0) {
+        setBv(0);
+      }
     }
-    // console.log(cart.qty)
-    dispatch(change_to_qty(cart.qty, cart.id, harga, type));
+    console.log('cart',cart)
+    dispatch(change_to_package_qty(cart.qty, cart.id, harga, bvv, weight, type));
+    setCartState(cartReducer);
   };
 
   // const tampil = () => {
@@ -106,22 +123,26 @@ const Keranjang = ({ navigation }) => {
 
   //delete item
   const deleteItem = (id, hargaTotal) => {
-    dispatch(delete_cart(id));
+    console.log('cartReducer awal del', cartReducer)
+    dispatch(delete_package(id));
     setCartState(cartReducer);
     setTotal(cartReducer.total);
     setBv(cartReducer.bv);
     forceUpdate();
+    console.log('cartReducer del', cartReducer)
   };
 
   // delete all item 
   const deleteAll = () => {
-    dispatch(delete_cart_all());
+    console.log('cartReducer awal del all', cartReducer)
+    dispatch(delete_package_all());
     // alert('asasasasasasas')
     setCartState(cartReducer);
     setTotal(cartReducer.total);
     setBv(cartReducer.bv);
     setIsSelected(false);
     forceUpdate();
+    console.log('cartReducer del all', cartReducer)
   };
 
   //memilih semua keranjang
@@ -132,7 +153,7 @@ const Keranjang = ({ navigation }) => {
     } else {
       trueFalse = false;
     }
-    dispatch(selected_cart(null, trueFalse));
+    dispatch(selected_package(null, trueFalse));
   };
 
   if (isLoading) {
@@ -147,7 +168,7 @@ const Keranjang = ({ navigation }) => {
       <View style={styles.contentHeader}>
         <Text style={styles.textKeranjang}>Pilih Tipe:</Text>
         {activations.map((item) => {
-          let nama_paket=item.name
+          let nama_paket = item.name
           nama_paket = nama_paket.charAt(0).toUpperCase() + nama_paket.slice(1);
           let bv_min = item.bv_min * 1000
           return (
@@ -156,7 +177,7 @@ const Keranjang = ({ navigation }) => {
                 <RadioButton
                   value={item.name}
                   status={checked === item.name ? 'checked' : 'unchecked'}
-                  onPress={() => checkBvmin(bv_min,setChecked(item.name)) }
+                  onPress={() => checkBvmin(bv_min, item.id, setChecked(item.name))}
                 />
               </View>
               <View style={{ width: '90%' }} >
@@ -164,7 +185,7 @@ const Keranjang = ({ navigation }) => {
               </View>
             </View>
           );
-        })}   
+        })}
       </View>
 
       <View style={styles.contentHeader}>
@@ -196,10 +217,10 @@ const Keranjang = ({ navigation }) => {
               // selectedFalse={() => {selectedFalse()}}
               cart={cart}
               btnMin={() => {
-                quantity(cart.harga, 'MIN', cart);
+                quantity(cart.harga, cart.bv, cart.weight, 'MIN', cart);
               }}
               btnPlush={() => {
-                quantity(cart.harga, 'PLUSH', cart);
+                quantity(cart.harga, cart.bv, cart.weight, 'PLUSH', cart);
               }}
               deleteItem={() => {
                 deleteItem(cart.id, cart.qty * cart.harga);
@@ -217,7 +238,7 @@ const Keranjang = ({ navigation }) => {
           name='Tambah'
           width='30%'
           color={colors.btn_primary}
-          func={() => { navigation.navigate('Products') }}
+          func={() => { navigation.navigate('Products', { dataForm: dataForm, dataType: dataType }) }}
         />
         {cartState.item.length == 0 ?
           (
@@ -230,23 +251,23 @@ const Keranjang = ({ navigation }) => {
           )
           :
           bvmin > bv ?
-          (
-            <ButtonCustom
-              name='CheckOut'
-              width='30%'
-              color={colors.disable}
-              func={() => alert('BV kurang atau masih dibawah batasan minimum.')}
-            />
-          )
-          :
-          (
-            <ButtonCustom
-              name='CheckOut'
-              width='30%'
-              color={colors.btn}
-              func={() => alert('BV cukup.'+bvmin+'-'+bv)}
-            />
-          )
+            (
+              <ButtonCustom
+                name='CheckOut'
+                width='30%'
+                color={colors.disable}
+                func={() => alert('BV kurang atau masih dibawah batasan minimum.')}
+              />
+            )
+            :
+            (
+              <ButtonCustom
+                name='CheckOut'
+                width='30%'
+                color={colors.btn}
+                func={() => navigation.navigate('Agen', { dataForm: dataForm, dataType: dataType, activationType: activationType })}
+              />
+            )
         }
 
       </View>
@@ -254,7 +275,7 @@ const Keranjang = ({ navigation }) => {
   );
 };
 
-export default Keranjang;
+export default Package;
 
 const styles = StyleSheet.create({
   container: {

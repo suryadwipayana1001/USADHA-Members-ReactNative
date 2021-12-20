@@ -25,7 +25,7 @@ const List = (props) => {
   );
 };
 
-const Products = ({ navigation }) => {
+const Products = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState(null);
   const TOKEN = useSelector((state) => state.TokenApi);
@@ -42,7 +42,9 @@ const Products = ({ navigation }) => {
   const cartReducer = useSelector((state) => state.PackageReducer.item);
   const userReducer = useSelector((state) => state.UserReducer);
   const dispatch = useDispatch();
-  var penanda = false;
+  const dataForm = route.params.dataForm;
+  const dataType = route.params.dataType;
+  // var penanda = false;
 
   useEffect(() => {
     // alert('use eff')
@@ -140,6 +142,7 @@ const Products = ({ navigation }) => {
         item.bv= parseInt(product.bv)
     
       // mencari data jika ada yang sama di keranjang
+      let penanda = false;
       cartReducer.some(function (entry, i) {
         if (entry.id == product.id) {
           penanda = true;
@@ -150,7 +153,7 @@ const Products = ({ navigation }) => {
 
       if (!penanda) {
         dispatch(add_to_package(item, 1));
-        navigation.navigate('Package');
+        navigation.navigate('Package', {dataForm: dataForm, dataType : dataType});
         Alert.alert('Add to Package');
       } else {
         Alert.alert('item sudah ada di dalam keranjang');

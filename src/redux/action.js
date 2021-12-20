@@ -2,13 +2,15 @@ export const add_to_package = (value, count) => {
   return {type: 'ADD_TO_PACKAGE', valueItem: value, count: count};
 };
 
-export const change_to_package_qty = (value, id, harga, typeOperator) => {
+export const change_to_package_qty = (value, id, harga, bv, weight, typeOperator) => {
   return {
     type: 'CHANGE_TO_PACKAGE_QTY',
     valueItem: value,
     id: id,
     harga: harga,
     typeOperator: typeOperator,
+    bv: bv,
+    weight: weight,
   };
 };
 

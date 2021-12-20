@@ -34,6 +34,7 @@ const initialPackageItem = {
   total: 0,
   count: 0,
   bv: 0,
+  totalWeight: 0,
 };
 const PackageReducer = (state = initialPackageItem, action) => {
   // console.log('initial reducer',initialPackageItem.length)
@@ -42,6 +43,7 @@ const PackageReducer = (state = initialPackageItem, action) => {
     state.item[state.item.length] = action.valueItem;
     state.total = state.total + action.valueItem.harga;
     state.bv = state.bv + action.valueItem.bv;
+    state.totalWeight = state.totalWeight + action.valueItem.weight;
     state.count = state.count + action.count;
 
     // item[item.length] = {ID:'3',Name:'Some name 3',Notes:'NOTES 3'};
@@ -61,6 +63,7 @@ const PackageReducer = (state = initialPackageItem, action) => {
         if (action.typeOperator == 'MIN') {
           state.total = state.total - action.harga;
           state.bv = state.bv - action.bv;
+          state.totalWeight = state.totalWeight - action.weight;
           paket.qty  = paket.qty - 1
           if (state.total < 0) {
             state.total = 0;
@@ -68,11 +71,25 @@ const PackageReducer = (state = initialPackageItem, action) => {
           if (state.bv < 0) {
             state.bv = 0;
           }
+          if (state.totalWeight < 0) {
+            state.totalWeight = 0;
+          }
             // console.log(paket.qty)
         } else if (action.typeOperator == 'PLUSH') {
           state.total = state.total + action.harga;
           state.bv = state.bv + action.bv;
-          console.log('ini plush pada state', state.total);
+          state.totalWeight = state.totalWeight + action.weight;
+          paket.qty  = paket.qty + 1
+          if (state.total < 0) {
+            state.total = 0;
+          }
+          if (state.bv < 0) {
+            state.bv = 0;
+          }
+          if (state.totalWeight < 0) {
+            state.totalWeight = 0;
+          }
+          // console.log('ini plush pada state', state.total);
         }
       }
       // state.total = state.total + x.harga
@@ -86,6 +103,7 @@ const PackageReducer = (state = initialPackageItem, action) => {
       if (itemArray[i].id === action.id) {
         state.total = state.total - (itemArray[i].harga * itemArray[i].qty);
         state.bv = state.bv - (itemArray[i].bv * itemArray[i].qty);
+        state.totalWeight = state.totalWeight - (itemArray[i].weight * itemArray[i].qty);
         state.item.splice(i, 1);
         state.count = state.count - 1;
         // console.log(itemArray[i].qty)
@@ -110,6 +128,7 @@ const PackageReducer = (state = initialPackageItem, action) => {
       if (itemArray[i].selected === true) {
         state.total = state.total - (itemArray[i].harga * itemArray[i].qty);
         state.bv = state.bv - (itemArray[i].bv * itemArray[i].qty);
+        state.totalWeight = state.totalWeight - (itemArray[i].weight * itemArray[i].qty);
         itemArray.splice(i, 1);
       } else {
         ++i;
@@ -123,6 +142,7 @@ const PackageReducer = (state = initialPackageItem, action) => {
     state.total = 0;
     state.count = 0;
     state.bv = 0;
+    state.totalWeight = 0;
   }
   //kirim nilai initiallState ke state
   return state; //dan hasilkan nilai state saat reducer ini dipanggil di store,js

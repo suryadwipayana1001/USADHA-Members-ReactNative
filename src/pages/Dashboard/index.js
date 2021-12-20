@@ -187,9 +187,7 @@ const Dashboard = ({navigation}) => {
               color="#03c4a1"
             />
           </View>
-        </View>
-
-        <TouchableOpacity style={{width : '50%', backgroundColor : '#ffffff', height : 300, padding : 5, marginBottom : 5,}} onPress ={() => navigation.navigate('Package')}><Text style={styles.textlihatPromo}> Go to Package</Text></TouchableOpacity>
+        </View>   
 
         {/* content --header */}
         <View style={styles.line}/>

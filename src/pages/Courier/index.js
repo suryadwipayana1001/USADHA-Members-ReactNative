@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getDistance } from 'geolib';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
+import {check_out_package, delete_cart_all} from '../../redux';
 
 const Courier = ({ navigation, route }) => {
     const [provinces, setProvinces] = useState(null)
@@ -25,11 +26,11 @@ const Courier = ({ navigation, route }) => {
     const userReducer = useSelector((state) => state.UserReducer);
     const [priceCost, setPriceCost] = useState(0)
     const dataAgen = route.params.dataAgen;
-    const typeMenu = route.params.type
+    const typeMenu = (typeof route.params.dataType !== 'undefined') ? route.params.dataType : route.params.type;
     const [toggleChangeCity, setToggleChangeCity] = useState(false)
     const TOKEN = useSelector((state) => state.TokenApi);
     const [dataOngkir, setDataOngkir] = useState({
-        origin: (typeMenu == 'Jaringan' && dataAgen.agent.city_id > 0) ? dataAgen.agent.city_id : (typeMenu != 'Jaringan' && dataAgen.city_id > 0) ? dataAgen.city_id : 114, //karangasem,
+        origin: (dataAgen.city_id > 0) ? dataAgen.city_id : 114, //karangasem,
         destination: userReducer.city_id,
         weight: 0,
         courier: null,
@@ -37,6 +38,9 @@ const Courier = ({ navigation, route }) => {
         province: userReducer.province_id,
         address: userReducer.address,
     });
+    const dataForm = (typeof route.params.dataForm !== 'undefined') ? route.params.dataForm : null;
+    const activationType = (typeof route.params.activationType !== 'undefined') ? route.params.activationType : null;
+    const packageReducer = useSelector((state) => state.PackageReducer);
     const dispatch = useDispatch();
     const [cost, setCost] = useState([])
     const [courier, setCourier] = useState([
@@ -59,14 +63,15 @@ const Courier = ({ navigation, route }) => {
 
     const handleInput = (input, value) => {
         setDataOngkir({
-          ...dataOngkir,
-          [input]: value,
+            ...dataOngkir,
+            [input]: value,
         });
-      };
+    };
 
-    const getOngkir = (input,a,b) => {
-        console.log('dataOngkir',dataOngkir)
-        let uptDataOngkir={
+    const getOngkir = (input, a, b) => {
+        // alert('getOngkir')
+        console.log('dataOngkir', dataOngkir)
+        let uptDataOngkir = {
             origin: dataOngkir.origin,
             destination: (input == 'destination') ? a[0] : (input == 'province') ? null : dataOngkir.destination,
             weight: dataOngkir.weight,
@@ -77,8 +82,8 @@ const Courier = ({ navigation, route }) => {
         }
         setDataOngkir(uptDataOngkir)
         setPriceCost(-1)
-        console.log('uptDataOngkir',uptDataOngkir)
-        if (input!='address' && uptDataOngkir.destination !== null && uptDataOngkir.origin != null && uptDataOngkir.origin >0 && uptDataOngkir.destination >0 && uptDataOngkir.weight != null && uptDataOngkir.courier != null) {            
+        console.log('uptDataOngkir', uptDataOngkir)
+        if (input != 'address' && uptDataOngkir.destination !== null && uptDataOngkir.origin != null && uptDataOngkir.origin > 0 && uptDataOngkir.destination > 0 && uptDataOngkir.weight != null && uptDataOngkir.courier != null) {
             setLoading(true)
             setLoadingCost(true)
             setCost([])
@@ -118,9 +123,12 @@ const Courier = ({ navigation, route }) => {
                 console.log(e);
             }).finally(f => setLoading(false))
         }
-      };
+    };
 
     useEffect(() => {
+        console.log('dataForm', dataForm)
+        console.log('dataType', typeMenu)
+        console.log('activationType', activationType)
         // alert('typeMenu '+typeMenu)
         // console.log('data', dataAgen);
         Promise.all([locationApi(), totalWeight(), destiDistance(dataOngkir)]).then((result) => {
@@ -148,7 +156,7 @@ const Courier = ({ navigation, route }) => {
 
     const destiDistance = (data) => {
         const promiseDistance = new Promise((resolve, reject) => {
-            console.log('desti',data.destination)
+            console.log('desti', data.destination)
             Axios.get(Config.API_PROVINCE_CITY + '?from=' + dataOngkir.origin + '&to=' + data.destination,
                 {
                     headers: {
@@ -179,7 +187,7 @@ const Courier = ({ navigation, route }) => {
             return promiseWeight;
         } else {
             // setDataOngkir({...dataOngkir, weight : dataAgen.weight})
-            return dataAgen.weight
+            return packageReducer.totalWeight
         }
     }
 
@@ -205,6 +213,14 @@ const Courier = ({ navigation, route }) => {
 
     const handleJaringan = () => {
         // console.log(priceCost)
+        //dataJaringan
+        let dataJaringan = dataForm;
+        dataJaringan.agents_id = dataAgen.id;
+        dataJaringan.weight = packageReducer.totalWeight;
+        dataJaringan.ongkir = dataOngkir;
+        dataJaringan.cart = packageReducer;
+        dataJaringan.activationtype = activationType
+        console.log('dataJaringan',dataJaringan)
         let price = 0;
         let service = ''
         cost.map((item, index) => {
@@ -215,15 +231,18 @@ const Courier = ({ navigation, route }) => {
         })
 
         let costDelivery = price
-        if(freeDeliveryStatus){
+        if (freeDeliveryStatus) {
             costDelivery = 1
         }
         let data = dataOngkir;
+        console.log('data',data)
+        console.log('costDelivery',costDelivery)
         data.cost = parseFloat(price);
         data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() : null
         data.delivery_service = service
-        if (data.courier != null && data.destination != null && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery >0) {
-            Axios.post(Config.API_REGISTER_DOWNLINE, dataAgen,
+        if (data.courier != null && data.destination != null && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery > 0) {
+            setLoading(true)
+            Axios.post(Config.API_REGISTER_DOWNLINE_CUSTPACKAGE, dataJaringan,
                 {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
@@ -231,13 +250,14 @@ const Courier = ({ navigation, route }) => {
                     }
                 }
             ).then((res) => {
+                dispatch(check_out_package());
                 navigation.navigate('NotifAlert', { notif: 'Registrasi Berhasil' })
                 setLoading(false)
                 console.log('jaringan', res.data)
             }).catch((e) => {
-                var mes = JSON.parse(error.request._response);
-                alert(mes)
-                console.log(e)
+                var mes = JSON.parse(e.request._response);
+                alert('Registrasi Gagal')
+                console.log(e.request._response)
                 setLoading(false)
             }).finally(f => setLoading(false))
         } else {
@@ -245,7 +265,7 @@ const Courier = ({ navigation, route }) => {
         }
     }
 
-    const handleCheckout = () => {        
+    const handleCheckout = () => {
         let price = 0;
         let service = ''
         cost.map((item, index) => {
@@ -256,16 +276,16 @@ const Courier = ({ navigation, route }) => {
         })
 
         let costDelivery = price
-        if(freeDeliveryStatus){
+        if (freeDeliveryStatus) {
             costDelivery = 1
         }
-        console.log('costDelivery',costDelivery)
+        console.log('costDelivery', costDelivery)
         let data = dataOngkir;
         data.cost = parseFloat(price);
         data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() : null
         data.delivery_service = service
         console.log('data yg dikirim', data)
-        if (data.courier != null && data.destination != null && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery >0) {
+        if (data.courier != null && data.destination != null && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery > 0) {
             navigation.navigate('CheckOut', { dataAgen: dataAgen, dataOngkir: data })
         } else {
             alert('mohon isi data dengan lengkap')
@@ -285,14 +305,14 @@ const Courier = ({ navigation, route }) => {
         })
 
         let costDelivery = price
-        if(freeDeliveryStatus){
+        if (freeDeliveryStatus) {
             costDelivery = 1
         }
         let data = dataOngkir;
         data.cost = parseFloat(price);
         data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() : null
         data.delivery_service = service
-        if (data.courier != null && data.destination && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery >0) {
+        if (data.courier != null && data.destination && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery > 0) {
             setLoading(true)
             Axios.post(Config.API_ACTIVE, dataAgen,
                 {
@@ -390,7 +410,7 @@ const Courier = ({ navigation, route }) => {
                     data={provinces}
                     onSelect={value => {
                         filterCity(value)
-                        getOngkir('province',value,handleInput('province', value[0]))
+                        getOngkir('province', value, handleInput('province', value[0]))
                         setDesti({
                             ...desti,
                             province: value
@@ -399,7 +419,7 @@ const Courier = ({ navigation, route }) => {
                     }}
                     onRemoveItem={value => {
                         filterCity(value)
-                        getOngkir('province',value,handleInput('province', value[0]))
+                        getOngkir('province', value, handleInput('province', value[0]))
                         setDesti({
                             ...desti,
                             province: value
@@ -424,7 +444,7 @@ const Courier = ({ navigation, route }) => {
                     cancelButtonText='cancel'
                     data={cities ? cities : [{ id: null, name: null }]}
                     onSelect={data => {
-                        getOngkir('destination',data,handleInput('destination', data[0]))
+                        getOngkir('destination', data, handleInput('destination', data[0]))
                         setDesti({
                             ...desti,
                             city: data
@@ -432,7 +452,7 @@ const Courier = ({ navigation, route }) => {
 
                     }}
                     onRemoveItem={data => {
-                        getOngkir('destination',data,handleInput('destination', data[0]))
+                        getOngkir('destination', data, handleInput('destination', data[0]))
                         setDesti({
                             ...desti,
                             city: data
@@ -456,18 +476,18 @@ const Courier = ({ navigation, route }) => {
                     cancelButtonText='cancel'
                     data={courier}
                     onSelect={data => {
-                        getOngkir('courier',data,handleInput('courier', data[0]))
+                        getOngkir('courier', data, handleInput('courier', data[0]))
                         // console.log(data)
                     }}
                     onRemoveItem={data => {
-                        getOngkir('courier',data,handleInput('courier', data[0]))
+                        getOngkir('courier', data, handleInput('courier', data[0]))
                     }}
                     style={{ borderColor: colors.default }}
                 />
                 <View style={{ marginVertical: 10 }} />
                 <Text>Address</Text>
                 <View style={{ marginVertical: 10 }} />
-                <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => getOngkir('address',value,handleInput('address', value))} />
+                <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => getOngkir('address', value, handleInput('address', value))} />
                 <View style={{ marginVertical: 10 }} />
                 <Text>Total berat {dataOngkir.weight} (gram)</Text>
                 <View style={{ marginVertical: 10 }} />

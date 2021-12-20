@@ -31,6 +31,41 @@ function useForceUpdate() {
   return () => setRefresh((refresh) => ++refresh); // update the state to force render
 }
 
+const ItemPaket = ({ item, onPress, style }) => (
+ <View style={{width : '100%'}}>
+    <TouchableOpacity onPress={onPress} style={[styles.item, style,  styles.agen]}>
+      <Text style={styles.textName}>{item.name}</Text>
+        <View style={{flexDirection : 'row', alignItems:'center'}}>
+          <Image source={{uri: Config.BASE_URL + `${item.img}`}} style={{width : 80, height: 80, borderWidth:1, marginRight:20, marginBottom : 10}}/>
+          {/* <Image style={{width : 80, height: 80, borderWidth:1, marginRight:20, marginBottom : 10}} source={profile}></Image> */}
+          <Text style={{width : '70%'}}>{item.description}</Text>
+        </View>
+      <Text style={{fontSize : 15, letterSpacing : 1, fontWeight : 'bold'}}> {Rupiah(parseInt(item.price))}</Text>
+    </TouchableOpacity>
+ </View>
+);
+
+const ItemAgen = ({ item, onPress, style }) => (
+  <View style={{width : '100%'}}>
+     <TouchableOpacity onPress={onPress} style={[styles.item, style,  styles.agen]}>
+       <Text style={[styles.textName]}>{item.name}</Text>
+         <View style={{flexDirection : 'row', alignItems:'center'}}>
+           <Image source={profile} style={{width : 80, height: 80, borderWidth:1, marginRight:20, marginBottom : 10}}/>
+           {/* <Image style={{width : 80, height: 80, borderWidth:1, marginRight:20, marginBottom : 10}} source={profile}></Image> */}
+            <View style={{width:'70%'}}>
+              <Text style={{fontWeight :'bold'}}>Email</Text>
+              <Text> {item.email}</Text>
+              <Text style={{fontWeight :'bold'}}>No.Hp</Text>
+              <Text> {item.phone}</Text>
+              <Text style={{fontWeight :'bold'}}>Alamat</Text>
+              <Text> {item.address}</Text>
+            </View>
+         </View>
+       <Text style={{fontSize : 15, letterSpacing : 1, fontWeight : 'bold'}}> {item.status}</Text>
+     </TouchableOpacity>
+  </View>
+ );
+
 const Input = ({title,placeholder ='', ...rest}) => {
   // const userReducer = useSelector((state) => state.UserReducer.data);
   return (
@@ -339,8 +374,7 @@ const Profile = ({navigation}) => {
           dataActivasi.package_id = paket.id;
           dataActivasi.agents_id = agen.id;
           dataActivasi.weight = paket.weight
-          // navigation.navigate('Courier', {dataAgen: dataActivasi, type : 'Activasi'})
-          navigation.navigate('Package', {dataForm: dataActivasi, dataType : 'Activasi'})
+          navigation.navigate('Courier', {dataAgen: dataActivasi, type : 'Activasi'})
     //     }
     //   }else{
     //     setLoading(false)
