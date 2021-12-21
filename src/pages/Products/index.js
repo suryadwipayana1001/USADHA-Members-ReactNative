@@ -9,14 +9,14 @@ import { ButtonCustom, Header2, Releoder } from '../../component';
 import { colors } from '../../utils/colors';
 import { Image, StyleSheet, Text, View, FlatList, TextInput, Alert } from 'react-native';
 import { Rupiah } from '../../helper/Rupiah';
-import {useSelector, useDispatch} from 'react-redux';
-import {add_to_package} from './../../redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { add_to_package } from './../../redux';
 
 const List = (props) => {
   return (
     <TouchableOpacity onPress={props.select}>
       <View style={styles.body(props.selectAgen)}>
-        <Image source = {{uri : `${Config.BASE_URL}/${props.img}`}} style={styles.image} />
+        <Image source={{ uri: `${Config.BASE_URL}/${props.img}` }} style={styles.image} />
         <Text style={styles.textNama}>{props.nama}</Text>
         <Text style={styles.textNama}>{Rupiah(parseInt(props.price))}</Text>
         <Text style={styles.textNama}>{props.description}</Text>
@@ -70,7 +70,7 @@ const Products = ({ navigation, route }) => {
       } else {
         setProducts(res[0].data)
       }
-      console.log('getData',res[0].data)
+      console.log('getData', res[0].data)
       setLastPage(res[0].data.last_page)
       setIsLoading(false)
       setRefresh(false)
@@ -123,53 +123,49 @@ const Products = ({ navigation, route }) => {
     qty: null,
     note: '',
     status: '',
-    weight : '',
-    img : '',
-    bv : null,
+    weight: '',
+    img: '',
+    bv: null,
   };
-  
+
   const insertCart = (product) => {
-    if(userReducer.status === 'active'){
-        item.id= product.id
-        item.namaProduct= product.name
-        item.harga= parseInt(product.price)
-        item.selected= false
-        item.qty= 1
-        item.note= ''
-        item.img = product.img
-        item.status= 'pending'
-        item.weight = parseFloat(product.weight)
-        item.bv= parseInt(product.bv)
-    
-      // mencari data jika ada yang sama di keranjang
-      let penanda = false;
-      cartReducer.some(function (entry, i) {
-        if (entry.id == product.id) {
-          penanda = true;
-          return true;
-        }
-      });
-      console.log(penanda);
+    item.id = product.id
+    item.namaProduct = product.name
+    item.harga = parseInt(product.price)
+    item.selected = false
+    item.qty = 1
+    item.note = ''
+    item.img = product.img
+    item.status = 'pending'
+    item.weight = parseFloat(product.weight)
+    item.bv = parseInt(product.bv)
 
-      if (!penanda) {
-        dispatch(add_to_package(item, 1));
-        navigation.navigate('Package', {dataForm: dataForm, dataType : dataType});
-        Alert.alert('Add to Package');
-      } else {
-        Alert.alert('item sudah ada di dalam keranjang');
+    // mencari data jika ada yang sama di keranjang
+    let penanda = false;
+    cartReducer.some(function (entry, i) {
+      if (entry.id == product.id) {
+        penanda = true;
+        return true;
+      }
+    });
+    console.log(penanda);
+
+    if (!penanda) {
+      dispatch(add_to_package(item, 1));
+      navigation.navigate('Package', { dataForm: dataForm, dataType: dataType });
+      Alert.alert('Add to Package');
+    } else {
+      Alert.alert('item sudah ada di dalam keranjang');
     }
-  }else{
-    alert('Mohon melakukan activasi dahulu')
-  }
 
-// console.log(userReducer.status)
-};
+    // console.log(userReducer.status)
+  };
 
   const renderItem = ({ item }) => {
     let productimg = item.img;
-          if(productimg != null && productimg !=""){
-            productimg  = productimg.replace("/public", "");
-          }
+    if (productimg != null && productimg != "") {
+      productimg = productimg.replace("/public", "");
+    }
     return (
       <List
         nama={item.name}
@@ -207,12 +203,12 @@ const Products = ({ navigation, route }) => {
     <SafeAreaView style={{ flex: 1 }}>
 
       <View style={styles.container}>
-      <Header2 title='Pilih Product' btn={() => navigation.goBack()} />
-      <View
-        style={{
-          marginVertical: 10
-        }}
-      />
+        <Header2 title='Pilih Product' btn={() => navigation.goBack()} />
+        <View
+          style={{
+            marginVertical: 10
+          }}
+        />
         <View style={{ flexDirection: 'row' }}>
           <TextInput style={styles.search} value={find} onChangeText={(item) => setFind(item)} ></TextInput>
           <ButtonCustom
@@ -223,10 +219,10 @@ const Products = ({ navigation, route }) => {
           />
         </View>
         <View
-        style={{
-          marginVertical: 10
-        }}
-      />
+          style={{
+            marginVertical: 10
+          }}
+        />
         <FlatList
           // ListHeaderComponent={<Text>Hallo</Text>}
           keyExtractor={(item, index) => index.toString()}
@@ -284,8 +280,8 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   image: {
-    height : 200,
-    width : '100%',
+    height: 200,
+    width: '100%',
     marginBottom: 10,
   },
   textNama: {

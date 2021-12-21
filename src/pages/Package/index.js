@@ -40,10 +40,11 @@ const Package = ({ navigation, route }) => {
   const dataForm = route.params.dataForm;
   const dataType = route.params.dataType;
   const [activationType, setActivationType] = useState(1);
+  const [checkeddef, setCheckeddef] = useState(0);
 
   useEffect(() => {
     console.log('cartReducer', cartReducer)
-    console.log('dataForm', dataForm)
+    console.log('dataFormm', dataForm)
     console.log('dataType', dataType)
     if (isFocused) {
       setIsLoading(true)
@@ -62,7 +63,31 @@ const Package = ({ navigation, route }) => {
 
   const getData = async () => {
     Promise.all([apiActivations()]).then(res => {
-      setActivations(res[0])
+      // console.log('apiActivations', res[0])
+      console.log('dataForm.activations.id', dataForm.activations.id)
+      let dataActivationsArr = []
+      let bvPrev = 0
+      let firstSelected = 0
+      if (dataType == 'Upgrade') {
+        let dataActivations = res[0]
+        dataActivations.map((item, index) => {
+          if (item.id == dataForm.activations.id) {
+            bvPrev = item.bv_min
+          }
+          if (item.id > dataForm.activations.id) {
+            dataActivationsArr[index] = { id: item.id, name: item.name, type: item.type, bv_min: item.bv_min - bvPrev, bv_max: item.bv_max - bvPrev }
+            if (firstSelected == 0 && checkeddef==0) {
+              setChecked(item.name)
+              setCheckeddef(1)
+            }
+            firstSelected = firstSelected + 1
+          }
+        })
+        // console.log('dataActivationsArr',dataActivationsArr)
+        setActivations(dataActivationsArr)
+      } else {
+        setActivations(res[0])
+      }
       setIsLoading(false)
     }).catch(e => {
       setIsLoading(false)
@@ -112,7 +137,7 @@ const Package = ({ navigation, route }) => {
         setBv(0);
       }
     }
-    console.log('cart',cart)
+    console.log('cart', cart)
     dispatch(change_to_package_qty(cart.qty, cart.id, harga, bvv, weight, type));
     setCartState(cartReducer);
   };

@@ -31,38 +31,39 @@ function useForceUpdate() {
   return () => setRefresh((refresh) => ++refresh); // update the state to force render
 }
 
-const Input = ({title,placeholder ='', ...rest}) => {
+const Input = ({ title, placeholder = '', ...rest }) => {
   // const userReducer = useSelector((state) => state.UserReducer.data);
   return (
     <View>
       <Text style={styles.textUsername}>{title}</Text>
-      <TextInput style={styles.inputUsername} {...rest} placeholder = {placeholder}  />
+      <TextInput style={styles.inputUsername} {...rest} placeholder={placeholder} />
     </View>
   );
 };
 
-const Profile = ({navigation}) => {
+const Profile = ({ navigation }) => {
   const userReducer = useSelector((state) => state.UserReducer);
   const [form, setForm] = useState(userReducer);
-  const dispatch = useDispatch();  
+  const dispatch = useDispatch();
   const TOKEN = useSelector((state) => state.TokenApi);
   const [loading, setLoading] = useState(true);
   const [paket, setPaket] = useState(null)
-  const [point, setPoint] = useState (0)
-  const [pointUpgrade, setPointUpgrade] = useState (0)
-  const [pointSaving, setPointSaving] = useState (0)
-  const [pointFee, setPointFee] = useState (0)
+  const [point, setPoint] = useState(0)
+  const [pointUpgrade, setPointUpgrade] = useState(0)
+  const [pointSaving, setPointSaving] = useState(0)
+  const [pointFee, setPointFee] = useState(0)
   const [selectedId, setSelectedId] = useState(null);
   const isFocused = useIsFocused();
-  const [agen,setAgen] = useState()
-  const[itemAgen ,setItemAGen] = useState(null)
+  const [agen, setAgen] = useState()
+  const [itemAgen, setItemAGen] = useState(null)
   // const [dataAgen, setDataAgen] = useState(null)
   const forceUpdate = useForceUpdate();
-  const [item1, setItem1]= useState(null)
+  const [item1, setItem1] = useState(null)
   const [selectAgen, setSelectAgen] = useState(false)
   // const [status, setStatus] = useState(form.status)
   const [password, setPassword] = useState(null)
   const [confirmPassword, setConfirmPassword] = useState(null)
+  const [confirm, setConfirm] = useState(null)
   const [provinces, setProvinces] = useState(null)
   const [cities, setCities] = useState(null)
   const [oldCities, setOldCities] = useState(null)
@@ -75,73 +76,33 @@ const Profile = ({navigation}) => {
   const [location, setLocation] = useState({
     latitude: 0.00000000,
     longitude: 0.00000000
-  })  
+  })
   const [enableLocation, setEnableLocation] = useState()
   let dataUpdate = {
-    id : '',
-    name : '',
-    phone : '',
-    email : '',
+    id: '',
+    name: '',
+    phone: '',
+    email: '',
     // password : '',
-    address : '',
-    lat :'',
-    lng : '',
-    province_id : '',
-    city_id : ''
+    address: '',
+    lat: '',
+    lng: '',
+    province_id: '',
+    city_id: ''
   }
 
-  
+
   useEffect(() => {
-    if(isFocused){
+    console.log('form',form)
+    if (isFocused) {
       setLoading(true)
       setForm(userReducer)
-      LocationServicesDialogBox.checkLocationServicesIsEnabled({
-        message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
-        ok: "YES",
-        cancel: "NO",
-      }).then(function(result) {
-          console.log('1');
-          Promise.all([apiAgents(),getPaket(),getPoint(),locationApi(), requestLocationPermission()]).then(res => {
-           
-              setItemAGen(res[0]);
-              let dataAgen=res[0]
-              Geolocation.getCurrentPosition((position) => {
-                    setLocation({
-                      latitude: position.coords.latitude,
-                      longitude: position.coords.longitude, 
-                    })
-                    // console.log('location', position);
-                    // setLoading(false)
-                    let arrayAgen = [];
-                    dataAgen.map((item, index) => {
-                        var distance = getDistance(
-                        {latitude: position.coords.latitude, longitude:  position.coords.longitude},
-                        {latitude: parseFloat(item.lat), longitude: parseFloat(item.lng)},
-                        );
-                        arrayAgen.push(item)
-                        arrayAgen[index].distance = distance
-                    })
-                    setItemAGen(arrayAgen.sort(function (a, b) {
-                      return a.distance - b.distance;
-                    }))
-                    setLoading(false)
-                  },
-                  error =>{
-                    Alert.alert('Error', JSON.stringify(error))
-                    setLoading(false)
-                  } ,
-                { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
-              );
-          }).catch((e) => {
-            console.log(e);
-            console.log('4');
-            setLoading(false)
-          })
-      }).catch((error) => {
-          console.log(error.message); // error.message => "disabled"
-          // setLoading(false)
-          console.log('5');
-          setLoading(false)
+      Promise.all([getPoint(), locationApi(), requestLocationPermission()]).then(res => {
+        setLoading(false)
+      }).catch((e) => {
+        console.log(e);
+        console.log('4');
+        setLoading(false)
       })
     }
   }, [isFocused])
@@ -150,24 +111,24 @@ const Profile = ({navigation}) => {
     filterCity(userReducer.province_id)
   }, [oldCities])
 
-  const requestLocationPermission =  async () => {
-    let info ='';
+  const requestLocationPermission = async () => {
+    let info = '';
     try {
-        const granted = await PermissionsAndroid.request(
+      const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            'title': 'Location Permission',
-            'message': 'MyMapApp needs access to your location'
-          }
-        )
+        {
+          'title': 'Location Permission',
+          'message': 'MyMapApp needs access to your location'
+        }
+      )
 
-       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          setEnableLocation(true)
-       } else {
-          setEnableLocation(false)
-       }
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        setEnableLocation(true)
+      } else {
+        setEnableLocation(false)
+      }
     } catch (err) {
-        info=1
+      info = 1
     }
 
     return enableLocation
@@ -175,14 +136,14 @@ const Profile = ({navigation}) => {
 
   const locationApi = () => {
     Axios.get('http://admin.belogherbal.com/api/open/location', {
-      headers : {
-        'Accept' : 'application/json'
+      headers: {
+        'Accept': 'application/json'
       }
     }).then((result) => {
       // console.log('API Location',result);
-      result.data.province.forEach(obj => {renameKey(obj, 'title', 'name')});
-      result.data.city.forEach(obj => {renameKey(obj, 'title', 'name')});
-      setProvinces( result.data.province)
+      result.data.province.forEach(obj => { renameKey(obj, 'title', 'name') });
+      result.data.city.forEach(obj => { renameKey(obj, 'title', 'name') });
+      setProvinces(result.data.province)
       setOldCities(result.data.city)
     }).catch((e) => {
       console.log('location', e);
@@ -191,9 +152,9 @@ const Profile = ({navigation}) => {
 
   const filterCity = (id) => {
     let data = []
-    if(oldCities){
+    if (oldCities) {
       oldCities.map((item, index) => {
-        if(item.province_id == id){
+        if (item.province_id == id) {
           data[index] = item
         }
       })
@@ -201,44 +162,6 @@ const Profile = ({navigation}) => {
 
     setCities(data)
   }
-
-  const getPaket = () => {
-    Axios.get(Config.API_PACKAGES_MEMBER, 
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          'Accept' : 'application/json' 
-        }
-      }
-    ).then((result) => {
-      // console.log('result : ', result.data);
-      setItem1(result.data.data)
-      getPoint()
-    }).catch((error) => {
-      alert('koneksi error, mohon buka ulang aplikasinya')
-      console.log(error);
-      // BackHandler.exitApp()
-    });
-  }
-
-  
-  const apiAgents = () => {
-    // console.log('root path',RootPath);
-    const promise = new Promise ((resolve, reject) => {
-      Axios.get(Config.API_AGENTS, 
-        {
-          headers: {
-            Authorization: `Bearer ${TOKEN}`,
-            'Accept' : 'application/json' 
-          }
-        }).then((result) => {
-                resolve(result.data);
-        }, (err) => {
-              reject(err);
-        })
-    })
-    return promise;
-}
 
   const onInputChange = (input, value) => {
     setForm({
@@ -260,38 +183,38 @@ const Profile = ({navigation}) => {
     dataUpdate.province_id = form.province_id
     dataUpdate.city_id = form.city_id
     setLoading(true)
-    if(password !== null ) {
-     if(password === confirmPassword){
-        Axios.post(Config.API_UPDATE_PROFILE , dataUpdate,
-        {
-          headers: {
-            Authorization: `Bearer ${TOKEN}`,
-            'Accept' : 'application/json' 
+    if (password !== null) {
+      if (password === confirmPassword) {
+        Axios.post(Config.API_UPDATE_PROFILE, dataUpdate,
+          {
+            headers: {
+              Authorization: `Bearer ${TOKEN}`,
+              'Accept': 'application/json'
+            }
           }
-        }
         ).then((result) => {
           // console.log('data profile',result.data)
           setForm(result.data.data)
           storeDataUser(result.data.data)
-          dispatch({type: 'SET_DATA_USER', value: result.data.data});
+          dispatch({ type: 'SET_DATA_USER', value: result.data.data });
           setPassword(null)
           setConfirmPassword(null)
           setLoading(false)
-          navigation.navigate('NotifAlert', {notif : 'Update Profile Berhasil'})
+          navigation.navigate('NotifAlert', { notif: 'Update Profile Berhasil' })
         }).catch((error) => {
           console.log('error ' + error);
-            setLoading(false)
+          setLoading(false)
         });
-     }else{
+      } else {
         alert('password tidak sama')
         setLoading(false)
-     }
-    }else{
+      }
+    } else {
       alert('mohon isi password')
       setLoading(false)
     }
 
-    console.log('data form',form)
+    console.log('data form', form)
     // console.log('data profile',)
   };
 
@@ -308,23 +231,23 @@ const Profile = ({navigation}) => {
 
   const getPoint = () => {
     Axios.get(Config.API_POINT + `${userReducer.id}`, {
-      headers : {
+      headers: {
         Authorization: `Bearer ${TOKEN}`,
-        'Accept' : 'application/json' 
+        'Accept': 'application/json'
       }
     })
-    .then((result) => {
-      // console.log('data point api', result.data.data[0].balance_points)
-      setPoint(parseInt(result.data.data[0].balance_points))
-      setPointUpgrade(parseInt(result.data.data[0].balance_upgrade_points))
-      setPointSaving(parseInt(result.data.data[0].balance_saving_points))
-      setPointFee(parseInt(result.data.data[0].fee_points))
-      // getAgen()
-    }).catch((e) => {
-      alert('koneksi error, mohon buka ulang aplikasinya')
-      console.log(e);
-      // BackHandler.exitApp()
-    })
+      .then((result) => {
+        // console.log('data point api', result.data.data[0].balance_points)
+        setPoint(parseInt(result.data.data[0].balance_points))
+        setPointUpgrade(parseInt(result.data.data[0].balance_upgrade_points))
+        setPointSaving(parseInt(result.data.data[0].balance_saving_points))
+        setPointFee(parseInt(result.data.data[0].fee_points))
+        // getAgen()
+      }).catch((e) => {
+        alert('koneksi error, mohon buka ulang aplikasinya')
+        console.log(e);
+        // BackHandler.exitApp()
+      })
   }
   const activasi = () => {
     setLoading(true)
@@ -334,13 +257,13 @@ const Profile = ({navigation}) => {
     //       setLoading(false)
     //       alert('Point Anda Kurang silahkan Top Up dulu')
     //     }else{
-          var dataActivasi = agen;
-          dataActivasi.id = form.id;
-          dataActivasi.package_id = paket.id;
-          dataActivasi.agents_id = agen.id;
-          dataActivasi.weight = paket.weight
-          // navigation.navigate('Courier', {dataAgen: dataActivasi, type : 'Activasi'})
-          navigation.navigate('Package', {dataForm: dataActivasi, dataType : 'Activasi'})
+    var dataActivasi = agen;
+    dataActivasi.id = form.id;
+    dataActivasi.package_id = paket.id;
+    dataActivasi.agents_id = agen.id;
+    dataActivasi.weight = paket.weight
+    // navigation.navigate('Courier', {dataAgen: dataActivasi, type : 'Activasi'})
+    navigation.navigate('Package', { dataForm: dataActivasi, dataType: 'Activasi' })
     //     }
     //   }else{
     //     setLoading(false)
@@ -353,213 +276,92 @@ const Profile = ({navigation}) => {
   }
 
 
-  const renderItem = ({ item }) => {
-    const borderColor = item.id === selectedId ? "#ff7b54" : colors.disable;
-
-    return (
-      <ItemPaket
-        item={item}
-        onPress={() => {setSelectedId(item.id);setPaket(item);}}
-        style={{ borderColor }}
-      />
-    );
-  };
-
-  const renderItemAgen = ({ item }) => {
-    const borderColor = item.id === selectedId ? "#ff7b54" : colors.disable;
-
-    return (
-      <ItemAgen
-        item={item}
-        onPress={() => {setSelectedId(item.id);setAgen(item);}}
-        style={{ borderColor }}
-      />
-    );
-  };
-
-
   const onShare = async () => {
     try {
       const result = await Share.share({
-        message:form.ref_link,
+        message: form.ref_link,
       });
     } catch (error) {
       alert(error.message);
     }
   };
 
-  if(loading){
+  if (loading) {
     return (
-      <Releoder/>
+      <Releoder />
     )
   }
 
-  if(form.status == 'pending' || form.status =='close'){
+  if (form.status == 'pending' || form.status == 'close') {
     return (
-    <View style={styles.container}>
-       <HeaderComponent/>
-      <View style={styles.body}>
-        {/* <View style={styles.info}>
-          <Text style={styles.label}>Nama  :</Text>
-          <Text style={styles.isi}>{form.name}</Text>
-        </View>
-        <View style={styles.info}>
-          <Text style={styles.label}>Email   :</Text>
-          <Text style={styles.isi}>{form.email}</Text>
-        </View> */}
-
-        {selectAgen ? 
-          <View style={styles.bodyItem}>
-            <View style={{ flex : 1 }}>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                    latitude: LATITUDE,
-                    longitude: LONGITUDE,
-                    latitudeDelta: LATITUDE_DELTA,
-                    longitudeDelta: LONGITUDE_DELTA,
-                    }}
-                >
-
-                {itemAgen && itemAgen.map((item) => {
-                    return (
-                        <Marker
-                            key ={item.id}
-                            coordinate={{latitude : (parseFloat(item.lat) == 0.00000000 ?  location.latitude : parseFloat(item.lat)), longitude:(parseFloat(item.lng) == 0.00000000 ?location.longitude : parseFloat(item.lng))}}
-                            onPress={() => {setSelectedId(item.id); setAgen(item) }}
-                            // draggable
-                        >
-                            <Callout style={styles.plainView}>
-                                <View>
-                                    <Text>{item.name}</Text>
-                                </View>
-                            </Callout>
-                        </Marker>
-                    )
-                })}
-
-              </MapView>
-            </View>
-            <View style={{ flex : 1 }}>
-              <FlatList
-                style={{width: '100%'}}
-                nestedScrollEnabled
-                data={['']}
-                keyExtractor={(data) => data}
-                renderItem={({item, index}) => {
-                  switch (index) {
-                    case 0:
-                      return (
-                        <View>
-                          <Text style={styles.pilihPaket} >Pilih Agen</Text>
-                          <FlatList
-                            data={itemAgen}
-                            renderItem={renderItemAgen}
-                            keyExtractor={(item) => item.id.toString()}
-                            extraData={selectedId}
-                          />
-                          {/* <TouchableOpacity style={styles.borderLogin} onPress = {() => activasi()} >
-                            <Text style={styles.textBtnLogin}>Activasi Sekarang</Text>
-                          </TouchableOpacity> */}
-                        </View>
-                      );
-                    default:
-                      return null;
-                  }
-                }}
+      <View style={styles.container}>
+        <HeaderComponent />
+        <ScrollView>
+          <View style={styles.form}>
+            <View style={{ marginBottom: 70 }}>
+              <Text style={styles.textTitle}>Aktivasi Member</Text>
+              {/* <View style={styles.login}>
+                    <Text style={styles.textLogin}> ayo buruan gabung </Text>
+                  </View> */}
+              <Input
+                placeholder='Name'
+                title="Name"
+                value={form.name}
+                onChangeText={(value) => onInputChange('name', value)}
               />
-            </View>
-     
-              <View style={{ marginTop : 10, marginBottom:30, flexDirection : 'row', justifyContent:'space-between'}}>
-                <ButtonCustom
-                  name = 'Back Paket'
-                  width = 'auto'
-                  color = {'red'}
-                  func = {() => {setSelectAgen(false); setPaket(null); setSelectedId(null)}}
-                />
-                <ButtonCustom
-                  name = 'Activasi Sekarang'
-                  width = '65%'
-                  color = {colors.btn}
-                  func = {() => Alert.alert(
-                    'Peringatan',
-                    `Ingin Activasi sekarang ? `,
-                    [
-                        {
-                            text : 'Tidak',
-                            onPress : () => console.log('tidak')
-                        },
-                        {
-                            text : 'Ya',
-                            onPress : () => activasi()
-                        }
-                    ]
-                )}
-                />
-              </View>
-          </View>
-          
-        : 
-          <View style={styles.bodyItem}>
-            <FlatList
-              style={{width: '100%'}}
-              nestedScrollEnabled
-              data={['filter', 'title1', 'list1', 'title2', 'list2']}
-              keyExtractor={(data) => data}
-              renderItem={({item, index}) => {
-                switch (index) {
-                  case 0:
-                    return (
-                      <View>
-                        <Text style={styles.pilihPaket} >Pilih Paket</Text>
-                        <FlatList
-                          data={item1}
-                          renderItem={renderItem}
-                          keyExtractor={(item) => item.id.toString()}
-                          extraData={selectedId}
-                        />
-                        {/* <TouchableOpacity style={styles.borderLogin} onPress = {() => activasi()} >
-                          <Text style={styles.textBtnLogin}>Activasi Sekarang</Text>
-                        </TouchableOpacity> */}
-                      </View>
-                    );
-                  default:
-                    return null;
-                }
-              }}
+              <Input
+                placeholder='Phone Number'
+                title="Phone Number"
+                keyboardType="numeric"
+                value={form.phone}
+                onChangeText={(value) => onInputChange('phone', value)}
               />
-              <View style={{alignItems : 'center', justifyContent : 'center', marginTop : 10, marginBottom:30}}>
-                {paket ? 
+              <Input
+                placeholder='Email'
+                title="Email"
+                keyboardType="email-address"
+                value={form.email}
+                onChangeText={(value) => onInputChange('email', value)}
+              />
+              <Input
+                placeholder='Address'
+                title="Adrres"
+                multiline={true}
+                // numberOfLines={4}
+                value={form.address}
+                onChangeText={(value) => onInputChange('address', value)}
+              />
+              <View style={{ marginTop: 20, alignItems: 'center', justifyContent: 'center' }}>
+                {form.address != '' && form.name != '' && form.phone != '' && form.password != '' && form.email != '' ?
                   <ButtonCustom
-                    name = 'Lanjutkan'
-                    width = '100%'
-                    color = {colors.btn}
-                    func = {() => {setSelectAgen(true); setAgen(null); setSelectedId(null)}}
-                  />
-                  : 
-                  <ButtonCustom
-                    name = 'Lanjutkan'
-                    width = '100%'
-                    color = {colors.disable}
-                    func = {() => {alert('pilih paket terlebih dahulu')}}
-                  />
-                }
+                      name='Selanjutnya'
+                      width='100%'
+                      color={colors.btn}
+                      func={() => navigation.navigate('Package', { dataForm: form, dataType: 'Activasi' })}
+                    />
+                  : (
+                    <ButtonCustom
+                      name='Selanjutnya'
+                      width='100%'
+                      color={colors.disable}
+                      func={() => alert('Mohon lengkapi data anda')}
+                    />
+                  )}
               </View>
+            </View>
           </View>
-        }
-         
+        </ScrollView>
       </View>
-    </View>
     )
   } else {
     return (
       <View style={styles.container}>
-        <HeaderComponent/>
+        <HeaderComponent />
         <ScrollView>
           {/* update profile */}
-          <View style={{backgroundColor: '#ffffff', padding: 20}}>
-            
-            <View style={{alignItems: 'center'}}>
+          <View style={{ backgroundColor: '#ffffff', padding: 20 }}>
+
+            <View style={{ alignItems: 'center' }}>
               <QRCode
                 value={form.phone}
               />
@@ -568,44 +370,44 @@ const Profile = ({navigation}) => {
                 style={{width: 100, height: 100, marginTop: 10}}
               /> */}
             </View>
-            <View style={{ marginTop : 20, maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Link Referral :</Text>
-              <View style={{flex:4}}>
-                <Text  onPress={() => Linking.openURL(form.ref_link)}  style={{color : 'red'}}>{form.ref_link}</Text>
-                <View style={{flexDirection:'row', marginTop:10}}>
-                  <TouchableOpacity onPress={() =>{ Clipboard.setString(form.ref_link); alert('link is copy')}} style={{marginRight:20 }}>
-                    <Icon name='clipboard' size={20} color='#9966ff' style={{textAlign:'center'}}/>
-                    <Text style={{textAlign:'center'}}>Copy</Text>
+            <View style={{ marginTop: 20, maxWidth: '100%', marginBottom: 20, flexDirection: 'row' }}>
+              <Text style={{ flex: 2 }}>Link Referral :</Text>
+              <View style={{ flex: 4 }}>
+                <Text onPress={() => Linking.openURL(form.ref_link)} style={{ color: 'red' }}>{form.ref_link}</Text>
+                <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                  <TouchableOpacity onPress={() => { Clipboard.setString(form.ref_link); alert('link is copy') }} style={{ marginRight: 20 }}>
+                    <Icon name='clipboard' size={20} color='#9966ff' style={{ textAlign: 'center' }} />
+                    <Text style={{ textAlign: 'center' }}>Copy</Text>
                   </TouchableOpacity>
-                 <TouchableOpacity onPress={onShare}>
-                    <Icon name='share'color='#ff1a75' size={20} style={{textAlign:'center'}}/>
-                    <Text style={{textAlign:'center'}}>share it</Text>
-                 </TouchableOpacity>
+                  <TouchableOpacity onPress={onShare}>
+                    <Icon name='share' color='#ff1a75' size={20} style={{ textAlign: 'center' }} />
+                    <Text style={{ textAlign: 'center' }}>share it</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
 
-            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Poin Belanja :</Text>
-              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(point)}</Text>
+            <View style={{ maxWidth: '100%', marginBottom: 20, flexDirection: 'row' }}>
+              <Text style={{ flex: 2 }}>Poin Belanja :</Text>
+              <Text style={{ flex: 4, fontWeight: 'bold' }}>{Rupiah(point)}</Text>
             </View>
 
-            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Poin Upgrade :</Text>
-              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointUpgrade)}</Text>
+            <View style={{ maxWidth: '100%', marginBottom: 20, flexDirection: 'row' }}>
+              <Text style={{ flex: 2 }}>Poin Upgrade :</Text>
+              <Text style={{ flex: 4, fontWeight: 'bold' }}>{Rupiah(pointUpgrade)}</Text>
             </View>
 
-            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Poin Tabungan :</Text>
-              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointSaving)}</Text>
+            <View style={{ maxWidth: '100%', marginBottom: 20, flexDirection: 'row' }}>
+              <Text style={{ flex: 2 }}>Poin Tabungan :</Text>
+              <Text style={{ flex: 4, fontWeight: 'bold' }}>{Rupiah(pointSaving)}</Text>
             </View>
 
-            <View style={{maxWidth : '100%', marginBottom : 20, flexDirection:'row'}}>
-              <Text style={{flex:2}}>Poin Komisi :</Text>
-              <Text style={{flex:4,fontWeight : 'bold'}}>{Rupiah(pointFee)}</Text>
+            <View style={{ maxWidth: '100%', marginBottom: 20, flexDirection: 'row' }}>
+              <Text style={{ flex: 2 }}>Poin Komisi :</Text>
+              <Text style={{ flex: 4, fontWeight: 'bold' }}>{Rupiah(pointFee)}</Text>
             </View>
 
-            <Text style={{fontSize: 18, fontWeight: 'bold'}}>Edit Profile</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Edit Profile</Text>
             <View
               style={{
                 flexDirection: 'row',
@@ -616,19 +418,19 @@ const Profile = ({navigation}) => {
                 source={profile}
                 style={{height: 50, width: 50, marginRight: 20}}
               /> */}
-              {form.img == null || form.img == '' ?  
+              {form.img == null || form.img == '' ?
                 <Image
-                    source={profile}
-                  style={{height: 50, width: 50, marginRight: 20}}
-                /> : 
+                  source={profile}
+                  style={{ height: 50, width: 50, marginRight: 20 }}
+                /> :
                 <Image
-                  source = {{uri : Config.BASE_URL + `${form.img}?time="` + new Date()}}
-                style={{height: 50, width: 50, marginRight: 20}}
+                  source={{ uri: Config.BASE_URL + `${form.img}?time="` + new Date() }}
+                  style={{ height: 50, width: 50, marginRight: 20 }}
                 />
               }
-              <TouchableOpacity  onPress={()=>navigation.navigate('UploadImg')}>
-              {/* onPress={()=>navigation.navigate('UploadImg')} */}
-                <Text style={{fontSize: 15, color: '#03c4a1'}}>
+              <TouchableOpacity onPress={() => navigation.navigate('UploadImg')}>
+                {/* onPress={()=>navigation.navigate('UploadImg')} */}
+                <Text style={{ fontSize: 15, color: '#03c4a1' }}>
                   Perbarui Foto Profile
                 </Text>
               </TouchableOpacity>
@@ -643,14 +445,14 @@ const Profile = ({navigation}) => {
               secureTextEntry={true}
               value={password}
               onChangeText={(value) => setPassword(value)}
-              placeholder = '***********'
+              placeholder='***********'
             />
             <Input
               title="Confirm Password"
               secureTextEntry={true}
               value={confirmPassword}
               onChangeText={(value) => setConfirmPassword(value)}
-              placeholder = '***********'
+              placeholder='***********'
             />
             <Input
               title="Email"
@@ -667,32 +469,32 @@ const Profile = ({navigation}) => {
             <Text>Provinsi</Text>
             {provinces &&
               <Select2
-              isSelectSingle
-              style={{ borderRadius: 5 }}
-              searchPlaceHolderText='Seacrh Province'
-              colorTheme={colors.default}
-              popupTitle="Select Province"
-              // title={form.provinces.title}
-              title={form.provinces ? form.provinces.title : 'Mohon isi data Provinsi'}
-              selectButtonText='select'
-              cancelButtonText = 'cancel'
-              data={provinces}
-              onSelect={value => {
-                onInputChange('province_id', value[0])
-                filterCity(value[0])
-              }}
-              style={{borderColor :colors.default, borderTopWidth : 0, borderRightWidth : 0,  borderLeftWidth : 0,}}
-              onRemoveItem={value => {
-                onInputChange('province_id', value[0])
-              }}
-            />
+                isSelectSingle
+                style={{ borderRadius: 5 }}
+                searchPlaceHolderText='Seacrh Province'
+                colorTheme={colors.default}
+                popupTitle="Select Province"
+                // title={form.provinces.title}
+                title={form.provinces ? form.provinces.title : 'Mohon isi data Provinsi'}
+                selectButtonText='select'
+                cancelButtonText='cancel'
+                data={provinces}
+                onSelect={value => {
+                  onInputChange('province_id', value[0])
+                  filterCity(value[0])
+                }}
+                style={{ borderColor: colors.default, borderTopWidth: 0, borderRightWidth: 0, borderLeftWidth: 0, }}
+                onRemoveItem={value => {
+                  onInputChange('province_id', value[0])
+                }}
+              />
             }
-             <View style={{marginVertical : 10}} />
-             {(cities && form.city_id !=='') &&
+            <View style={{ marginVertical: 10 }} />
+            {(cities && form.city_id !== '') &&
               <>
-              <Text>Kota</Text>
-              <View style={{marginVertical : 10}} />
-                  <Select2
+                <Text>Kota</Text>
+                <View style={{ marginVertical: 10 }} />
+                <Select2
                   isSelectSingle
                   searchPlaceHolderText='Search City'
                   style={{ borderRadius: 5 }}
@@ -700,7 +502,7 @@ const Profile = ({navigation}) => {
                   popupTitle="Select Province"
                   title={form.city ? form.city.title : 'Mohon isi data Kota'}
                   selectButtonText='select'
-                  cancelButtonText = 'cancel'
+                  cancelButtonText='cancel'
                   data={cities}
                   onSelect={value => {
                     onInputChange('city_id', value[0])
@@ -708,10 +510,10 @@ const Profile = ({navigation}) => {
                   onRemoveItem={value => {
                     onInputChange('city_id', value[0])
                   }}
-                  style={{borderColor :colors.default, borderTopWidth : 0, borderRightWidth : 0,  borderLeftWidth : 0,}}
+                  style={{ borderColor: colors.default, borderTopWidth: 0, borderRightWidth: 0, borderLeftWidth: 0, }}
                 />
               </>
-              }
+            }
             <Input
               title="Alamat  "
               multiline={true}
@@ -719,82 +521,83 @@ const Profile = ({navigation}) => {
               value={form.address}
               onChangeText={(value) => onInputChange('address', value)}
             />
-            <Text style={styles.textUsername} onPress={() => console.log('reducer' , userReducer)} >Type</Text>
-            <View style={{flexDirection:'row',  alignItems : 'center', marginTop:10}}>
-              <ButtonCustom 
-                name = {form.activations.name}                
-                color = {colors.default}
-                width = '30%'
+            <Text style={styles.textUsername} onPress={() => console.log('reducer', userReducer)} >Type</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+              <ButtonCustom
+                name={form.activations.name}
+                color={colors.default}
+                width='30%'
               />
-              <View style={{marginHorizontal : 10}} />
-              <ButtonCustom 
-                name = 'Upgrade'
-                color = {colors.btn_primary}
-                width = '50%'
-                func = {() => navigation.navigate('UpgradeType')}
+              <View style={{ marginHorizontal: 10 }} />
+              <ButtonCustom
+                name='Upgrade'
+                color={colors.btn_primary}
+                width='50%'
+                func={() => navigation.navigate('Package', {dataForm: form, dataType : 'Upgrade'})}
               />
             </View>
             {/* <TouchableOpacity style={styles.borderLogin} onPress={updateData}>
               <Text style={styles.textBtnLogin}>Save</Text>
             </TouchableOpacity> */}
 
-              <View style = {{alignItems : 'center', justifyContent : 'center', marginTop : 20}}>
-                <ButtonCustom
-                    name = 'Update Data'
-                    color = {colors.btn}
-                    width = '100%'
-                    // func = {() => updateData()}
-                    func = {() => Alert.alert(
-                      'Peringatan',
-                      `Anda akan memperbarui profile ? `,
-                      [
-                          {
-                              text : 'Tidak',
-                              onPress : () => console.log(cities)
-                          },
-                          {
-                              text : 'Ya',
-                              onPress : () => updateData()
-                          }
-                      ]
-                  )}
-                />
-              </View>
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
+              <ButtonCustom
+                name='Update Data'
+                color={colors.btn}
+                width='100%'
+                // func = {() => updateData()}
+                func={() => Alert.alert(
+                  'Peringatan',
+                  `Anda akan memperbarui profile ? `,
+                  [
+                    {
+                      text: 'Tidak',
+                      onPress: () => console.log(cities)
+                    },
+                    {
+                      text: 'Ya',
+                      onPress: () => updateData()
+                    }
+                  ]
+                )}
+              />
+            </View>
 
-              <View style={{marginTop:40}}>
-                {location && 
+            <View style={{ marginTop: 40 }}>
+              {location &&
                 <MapView
-                    style={styles.map}
-                    //  provider={PROVIDER_GOOGLE}
-                    // showsUserLocation
-                    initialRegion={{
-                      latitude: parseFloat(form.lat) == 0.00000000 ?  location.latitude : parseFloat(form.lat),
-                      longitude: parseFloat(form.lng) == 0.00000000 ?location.longitude : parseFloat(form.lng),
-                      latitudeDelta:0.0022,
-                      longitudeDelta:0.0121}}
-                      followsUserLocation={true}
+                  style={styles.map}
+                  //  provider={PROVIDER_GOOGLE}
+                  // showsUserLocation
+                  initialRegion={{
+                    latitude: parseFloat(form.lat) == 0.00000000 ? location.latitude : parseFloat(form.lat),
+                    longitude: parseFloat(form.lng) == 0.00000000 ? location.longitude : parseFloat(form.lng),
+                    latitudeDelta: 0.0022,
+                    longitudeDelta: 0.0121
+                  }}
+                  followsUserLocation={true}
                 >
-                    <Marker
-                        coordinate={{latitude : (parseFloat(form.lat) == 0.00000000 ?  location.latitude : parseFloat(form.lat)), longitude:(parseFloat(form.lng) == 0.00000000 ?location.longitude : parseFloat(form.lng))}}
-                        // onDragEnd={e => console.log('onDragEnd', e.nativeEvent.coordinate.latitude)}
-                        onDragEnd={(e) => setForm({
-                            ...form,
-                            lat : e.nativeEvent.coordinate.latitude,
-                            lng : e.nativeEvent.coordinate.longitude
-                        })}
-                        draggable
-                    >
-                    </Marker>
+                  <Marker
+                    coordinate={{ latitude: (parseFloat(form.lat) == 0.00000000 ? location.latitude : parseFloat(form.lat)), longitude: (parseFloat(form.lng) == 0.00000000 ? location.longitude : parseFloat(form.lng)) }}
+                    // onDragEnd={e => console.log('onDragEnd', e.nativeEvent.coordinate.latitude)}
+                    onDragEnd={(e) => setForm({
+                      ...form,
+                      lat: e.nativeEvent.coordinate.latitude,
+                      lng: e.nativeEvent.coordinate.longitude
+                    })}
+                    draggable
+                  >
+                  </Marker>
                 </MapView>
-                }
+              }
             </View>
           </View>
         </ScrollView>
       </View>
     );
   };
-  }
-  
+}
+
 
 export default Profile;
 
@@ -802,7 +605,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    backgroundColor: colors.disable,
+    backgroundColor: '#ffffff',
+  },
+  form: {
+    paddingHorizontal: 30,
+    marginTop: 25,
+  },
+  textTitle: {
+    textAlign: 'center',
+    fontSize: 25,
+    marginBottom: 10,
   },
   textUsername: {
     justifyContent: 'flex-start',
@@ -839,46 +651,46 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
   },
-  body : {
+  body: {
     // paddingHorizontal : 20,
-    backgroundColor : '#ffffff',
-    flex : 1,
+    backgroundColor: '#ffffff',
+    flex: 1,
     // marginBottom : 10
   },
-  bodyItem : {
-    paddingHorizontal : 20,
-    backgroundColor : '#ffffff',
-    flex : 1,
+  bodyItem: {
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    flex: 1,
     // marginBottom : 10
   },
-  info : {
-    flexDirection : 'row',
-    alignItems : 'center',
-    marginVertical : 10,
-    marginTop : 10,
-  }, 
-  label : {
-    fontSize :  15,
-    color :'#ff781f',
-    fontWeight : 'bold'
+  info: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    marginTop: 10,
   },
-  isi : {
-    marginLeft : 30,
-    fontSize : 15,
-    fontWeight:'bold'
+  label: {
+    fontSize: 15,
+    color: '#ff781f',
+    fontWeight: 'bold'
   },
-  pilihPaket : {
-    marginBottom : 10,
-    fontSize : 20,
-    color : '#ff781f',
-    fontWeight:'bold'
+  isi: {
+    marginLeft: 30,
+    fontSize: 15,
+    fontWeight: 'bold'
   },
-  agen : {
-    padding : 20,
-    marginBottom : 10,
-    borderWidth : 3,
+  pilihPaket: {
+    marginBottom: 10,
+    fontSize: 20,
+    color: '#ff781f',
+    fontWeight: 'bold'
+  },
+  agen: {
+    padding: 20,
+    marginBottom: 10,
+    borderWidth: 3,
     // borderColor : colors.disable,
-    borderRadius : 5,
+    borderRadius: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -888,29 +700,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
 
     elevation: 0,
-  }, 
-  textName : {
-    fontSize : 15,
-    fontWeight : 'bold',
-    marginBottom : 10,
-    color : '#ff781f'
   },
-  textPoint : {
-    fontWeight : 'bold',
+  textName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#ff781f'
+  },
+  textPoint: {
+    fontWeight: 'bold',
   },
   type: {
-    marginTop : 10,
-    borderWidth : 1,
-    padding : 5,
-    width : 150,
-    borderRadius : 10,
-    textAlign : 'center',
-    backgroundColor : 'rgba(250, 190, 88, 1)',
-    borderColor : 'rgba(250, 190, 88, 1)',
-    color : '#ffffff'
+    marginTop: 10,
+    borderWidth: 1,
+    padding: 5,
+    width: 150,
+    borderRadius: 10,
+    textAlign: 'center',
+    backgroundColor: 'rgba(250, 190, 88, 1)',
+    borderColor: 'rgba(250, 190, 88, 1)',
+    color: '#ffffff'
   },
   map: {
-    height : 300,
-    width : '100%',
+    height: 300,
+    width: '100%',
   },
 });

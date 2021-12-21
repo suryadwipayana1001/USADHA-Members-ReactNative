@@ -40,9 +40,9 @@ const Agen = ({ navigation, route }) => {
   const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
   const LATITUDE = -8.3978769;
   const LONGITUDE = 115.2141418;
-  const dataForm = (typeof route.params.dataForm !=='undefined') ? route.params.dataForm : null;
-  const dataType = (typeof route.params.dataType !=='undefined') ? route.params.dataType : 'Checkout';
-  const activationType = (typeof route.params.activationType !=='undefined') ? route.params.activationType : null;
+  const dataForm = route.params.dataForm;
+  const dataType = route.params.dataType;
+  const activationType = route.params.activationType;
   var location = {
     latitude: 0.0000000,
     longitude: 0.0000000

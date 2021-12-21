@@ -150,7 +150,7 @@ const Keranjang = ({navigation}) => {
               name = 'CheckOut'
               width ='40%'
               color= {colors.btn}
-              func ={() => { navigation.navigate('Agen')}}
+              func ={() => { navigation.navigate('Agen', {dataForm: null, dataType : 'Checkout', activationType : null})}}
             />
           )
         }

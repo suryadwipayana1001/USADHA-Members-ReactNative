@@ -295,6 +295,14 @@ const Courier = ({ navigation, route }) => {
     }
 
     const handleActivasi = () => {
+        //dataActivasi
+        let dataActivasi = dataForm;
+        dataActivasi.agents_id = dataAgen.id;
+        dataActivasi.weight = packageReducer.totalWeight;
+        dataActivasi.ongkir = dataOngkir;
+        dataActivasi.cart = packageReducer;
+        dataActivasi.activationtype = activationType
+        console.log('dataActivasi',dataActivasi)
         let price = 0;
         let service = ''
         cost.map((item, index) => {
@@ -314,7 +322,7 @@ const Courier = ({ navigation, route }) => {
         data.delivery_service = service
         if (data.courier != null && data.destination && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery > 0) {
             setLoading(true)
-            Axios.post(Config.API_ACTIVE, dataAgen,
+            Axios.post(Config.API_ACTIVE_CUSTPACKAGE, dataActivasi,
                 {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
@@ -331,6 +339,60 @@ const Courier = ({ navigation, route }) => {
                 // console.log(error.request._response.message);
                 var mes = JSON.parse(error.request._response);
                 alert(mes.message)
+                console.log(error.request._response)
+                setLoading(false)
+            });
+        } else {
+            alert('mohon isi data dengan lengkap')
+        }
+    }
+
+    const handleUpgrade = () => {
+        //dataUpgrade
+        let dataUpgrade = dataForm;
+        dataUpgrade.agents_id = dataAgen.id;
+        dataUpgrade.weight = packageReducer.totalWeight;
+        dataUpgrade.ongkir = dataOngkir;
+        dataUpgrade.cart = packageReducer;
+        dataUpgrade.activationtype = activationType
+        console.log('dataUpgrade',dataUpgrade)
+        let price = 0;
+        let service = ''
+        cost.map((item, index) => {
+            if (item.id == priceCost) {
+                price = priceCost.replace(item.baseId, '');
+                service = item.service
+            }
+        })
+
+        let costDelivery = price
+        if (freeDeliveryStatus) {
+            costDelivery = 1
+        }
+        let data = dataOngkir;
+        data.cost = parseFloat(price);
+        data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() : null
+        data.delivery_service = service
+        if (data.courier != null && data.destination && data.origin != null && data.weight != null && (data.address != null && data.address != '') && costDelivery > 0) {
+            setLoading(true)
+            Axios.post(Config.API_UPGRADE_CUSTPACKAGE, dataUpgrade,
+                {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                        'Accept': 'application/json'
+                    }
+                }
+            ).then((result) => {
+                console.log('result data', result);
+                storeDataUser(result.data.data)
+                dispatch({ type: 'SET_DATA_USER', value: result.data.data });
+                setLoading(false)
+                navigation.navigate('NotifAlert', { notif: 'Sukses Activasi Member' })
+            }).catch((error) => {
+                // console.log(error.request._response.message);
+                var mes = JSON.parse(error.request._response);
+                alert(mes.message)
+                console.log(error.request._response)
                 setLoading(false)
             });
         } else {
@@ -542,6 +604,14 @@ const Courier = ({ navigation, route }) => {
                         width='100%'
                         color={colors.btn}
                         func={handleCheckout}
+                    />
+                }
+                {typeMenu == 'Upgrade' &&
+                    <ButtonCustom
+                        name='Upgrade'
+                        width='100%'
+                        color={colors.btn}
+                        func={handleUpgrade}
                     />
                 }
             </View>
