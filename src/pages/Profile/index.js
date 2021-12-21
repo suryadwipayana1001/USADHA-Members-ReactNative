@@ -616,7 +616,7 @@ const Profile = ({ navigation }) => {
                 func = {() =>resetLocation()}
               />
             </View>
-            <Text>{form.lat + ' dan ' + form.lng}</Text>
+            {/* <Text>{form.lat + ' dan ' + form.lng}</Text> */}
             <View style={{ marginTop: 40 }}>
               {location &&
                 <MapView
