@@ -25,6 +25,9 @@ import LocationServicesDialogBox from "react-native-android-location-services-di
 import { renameKey } from '../../utils';
 import Select2 from 'react-native-select-two';
 import { getDistance } from 'geolib';
+import Geolocation from 'react-native-geolocation-service';
+
+
 // import { BackHandler } from 'react-native';
 function useForceUpdate() {
   const [refresh, setRefresh] = useState(0); // integer state
@@ -91,17 +94,53 @@ const Profile = ({ navigation }) => {
     city_id: ''
   }
 
+  const Geo =() => {
+    const promiseGeo = new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition((position) => {
+          resolve(position)
+      },
+          error => reject(error) ,
+        { enableHighAccuracy: true, timeout: 200000, maximumAge: 1000 },
+      );
+    });
+    return promiseGeo
+  }
 
   useEffect(() => {
     console.log('form',form)
     if (isFocused) {
       setLoading(true)
       setForm(userReducer)
+      LocationServicesDialogBox.checkLocationServicesIsEnabled({
+        message: "<h2 style='color: #0af13e'>Use Location ?</h2>This app wants to change your device settings:<br/><br/>Use GPS, Wi-Fi, and cell network for location<br/><br/><a href='#'>Learn more</a>",
+        ok: "YES",
+        cancel: "NO",
+      }).then(succes => {
       Promise.all([getPoint(), locationApi(), requestLocationPermission()]).then(res => {
-        setLoading(false)
+        Geo().then(loc => {
+          setLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude, 
+          })
+          console.log('latitude',loc.coords.latitude);
+          console.log('longitude',loc.coords.longitude);
+          setLoading(false)
+      }).catch(err => {
+        setLocation({
+          latitude:0.00000000,
+          longitude: 0.00000000, 
+        })
+          Alert.alert('Error', JSON.stringify(err))
+          setLoading(false)
+      })
+        // setLoading(false)
       }).catch((e) => {
         console.log(e);
         console.log('4');
+        setLoading(false)
+      }) 
+    }).catch((e) => {
+        console.log(e.message) ;
         setLoading(false)
       })
     }
@@ -170,6 +209,13 @@ const Profile = ({ navigation }) => {
     });
     // console.log(form.name)
   };
+  const resetLocation=()=>{
+    setForm({
+      ...form,
+      lat : location.latitude,
+      lng : location.longitude
+    })
+  };
 
   const updateData = () => {
     dataUpdate.name = form.name
@@ -178,8 +224,8 @@ const Profile = ({ navigation }) => {
     dataUpdate.phone = form.phone
     dataUpdate.email = form.email
     dataUpdate.id = form.id
-    dataUpdate.lng = form.lng
-    dataUpdate.lat = form.lat
+    dataUpdate.lng = form.lng == 0.00000000 ? location.longitude : form.lng
+    dataUpdate.lat = form.lat == 0.00000000 ? location.latitude : form.lat
     dataUpdate.province_id = form.province_id
     dataUpdate.city_id = form.city_id
     setLoading(true)
@@ -540,11 +586,11 @@ const Profile = ({ navigation }) => {
               <Text style={styles.textBtnLogin}>Save</Text>
             </TouchableOpacity> */}
 
-            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
+            <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, flexDirection:'row'}}>
               <ButtonCustom
                 name='Update Data'
                 color={colors.btn}
-                width='100%'
+                width='50%'
                 // func = {() => updateData()}
                 func={() => Alert.alert(
                   'Peringatan',
@@ -561,8 +607,16 @@ const Profile = ({ navigation }) => {
                   ]
                 )}
               />
+               <View style={{paddingHorizontal:5}}></View>
+               <ButtonCustom
+                name = 'Reset'
+                color = {colors.btn}
+                width = '50%'
+                // func = {() => updateData()}
+                func = {() =>resetLocation()}
+              />
             </View>
-
+            {/* <Text>{form.lat + ' dan ' + form.lng}</Text> */}
             <View style={{ marginTop: 40 }}>
               {location &&
                 <MapView
@@ -570,12 +624,11 @@ const Profile = ({ navigation }) => {
                   //  provider={PROVIDER_GOOGLE}
                   // showsUserLocation
                   initialRegion={{
-                    latitude: parseFloat(form.lat) == 0.00000000 ? location.latitude : parseFloat(form.lat),
+                    latitude: parseFloat(form.lat) == 0.00000000 ?  location.latitude : parseFloat(form.lat),
                     longitude: parseFloat(form.lng) == 0.00000000 ? location.longitude : parseFloat(form.lng),
-                    latitudeDelta: 0.0022,
-                    longitudeDelta: 0.0121
-                  }}
-                  followsUserLocation={true}
+                    latitudeDelta:0.0022,
+                    longitudeDelta:0.0121}}
+                    followsUserLocation={true}
                 >
                   <Marker
                     coordinate={{ latitude: (parseFloat(form.lat) == 0.00000000 ? location.latitude : parseFloat(form.lat)), longitude: (parseFloat(form.lng) == 0.00000000 ? location.longitude : parseFloat(form.lng)) }}
