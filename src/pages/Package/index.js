@@ -62,13 +62,15 @@ const Package = ({ navigation, route }) => {
   };
 
   const getData = async () => {
+    // console.log('dataType',dataType)    
     Promise.all([apiActivations()]).then(res => {
       // console.log('apiActivations', res[0])
-      console.log('dataForm.activations.id', dataForm.activations.id)
+      // console.log('dataForm.activations.id', dataForm.activations.id)
       let dataActivationsArr = []
       let bvPrev = 0
       let firstSelected = 0
       if (dataType == 'Upgrade') {
+        console.log('Upgrade',dataType)
         let dataActivations = res[0]
         dataActivations.map((item, index) => {
           if (item.id == dataForm.activations.id) {
@@ -78,6 +80,7 @@ const Package = ({ navigation, route }) => {
             dataActivationsArr[index] = { id: item.id, name: item.name, type: item.type, bv_min: item.bv_min - bvPrev, bv_max: item.bv_max - bvPrev }
             if (firstSelected == 0 && checkeddef==0) {
               setChecked(item.name)
+              setBvmin((item.bv_min - bvPrev)*1000)
               setCheckeddef(1)
             }
             firstSelected = firstSelected + 1
@@ -86,6 +89,7 @@ const Package = ({ navigation, route }) => {
         // console.log('dataActivationsArr',dataActivationsArr)
         setActivations(dataActivationsArr)
       } else {
+        console.log('Not Upgrade',dataType)
         setActivations(res[0])
       }
       setIsLoading(false)
