@@ -614,7 +614,7 @@ const Profile = ({ navigation }) => {
               />
                <View style={{paddingHorizontal:5}}></View>
                <ButtonCustom
-                name = 'Reset'
+                name = 'Reset Koordinat'
                 color = {colors.btn}
                 width = '50%'
                 // func = {() => updateData()}

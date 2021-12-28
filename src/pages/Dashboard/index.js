@@ -213,7 +213,6 @@ const Dashboard = ({navigation}) => {
         </View>
         <View style={styles.line}/>
         <View style={{width : '100%',
-            height : '85%',
             padding : 5,
             flexDirection : 'row',
             flexWrap : 'wrap',

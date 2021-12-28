@@ -81,6 +81,7 @@ const Package = ({ navigation, route }) => {
             if (firstSelected == 0 && checkeddef==0) {
               setChecked(item.name)
               setBvmin((item.bv_min - bvPrev)*1000)
+              setActivationType(item.id)
               setCheckeddef(1)
             }
             firstSelected = firstSelected + 1
@@ -210,7 +211,7 @@ const Package = ({ navigation, route }) => {
                 />
               </View>
               <View style={{ width: '90%' }} >
-                <Text style={{ textAlign: 'left', paddingTop: 10 }}>Paket {nama_paket} (min {Numformat(bv_min)} bv)</Text>
+                <Text style={{ textAlign: 'left', paddingTop: 10 }}>Paket {nama_paket} ({item.id != 4 ? item.bv_min +' - '+ item.bv_max : 'min '+Numformat(item.bv_min)} bv)</Text>
               </View>
             </View>
           );
@@ -261,7 +262,7 @@ const Package = ({ navigation, route }) => {
       <View style={styles.boxTotal}>
         <View>
           <Text style={styles.textTotal}>{Rupiah(total)}</Text>
-          <Text style={styles.hargaTotal}>({Numformat(bv)} bv)</Text>
+          <Text style={styles.hargaTotal}>({Numformat(bv/1000)} bv)</Text>
         </View>
         <ButtonCustom
           name='Tambah'

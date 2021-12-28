@@ -15,6 +15,7 @@ import { getDistance } from 'geolib';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
 import {check_out_package, delete_cart_all} from '../../redux';
+import { ScrollView } from 'react-native-gesture-handler';
 
 const Courier = ({ navigation, route }) => {
     const [provinces, setProvinces] = useState(null)
@@ -456,9 +457,10 @@ const Courier = ({ navigation, route }) => {
     return (
         <SafeAreaView style={styles.container}>
             <Header2 title='Layanan Kurir' btn={() => navigation.goBack()} />
+            <ScrollView>
             <View style={{ paddingHorizontal: 20 }}>
                 <View style={{ marginVertical: 10 }} />
-                <Text>Province</Text>
+                <Text>Provinsi</Text>
                 <View style={{ marginVertical: 10 }} />
                 <Select2
                     isSelectSingle
@@ -615,6 +617,7 @@ const Courier = ({ navigation, route }) => {
                     />
                 }
             </View>
+            </ScrollView>
         </SafeAreaView>
     )
 }
