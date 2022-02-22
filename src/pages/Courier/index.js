@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getDistance } from 'geolib';
 import Geolocation from 'react-native-geolocation-service';
 import Geocoder from 'react-native-geocoding';
-import {check_out_package, delete_cart_all} from '../../redux';
+import { check_out_package, delete_cart_all } from '../../redux';
 import { ScrollView } from 'react-native-gesture-handler';
 
 const Courier = ({ navigation, route }) => {
@@ -92,32 +92,50 @@ const Courier = ({ navigation, route }) => {
                 console.log('Resultt', result);
                 //if free ongkir
                 let free_delivery = true;
-                if (result[1] > 100000 || dataOngkir.weight > 20000) {
+                if (result[1] > 100000 || dataOngkir.weight > 100000) {
                     free_delivery = false;
                 }
+                // if (free_delivery) {
+                //     alert('free' + '-' + result[0].status + '-' + result[1])
+                // } else {
+                //     alert('not free' + '-' + result[0].status + '-' + result[1])
+                // }
+
                 setLoading(false)
                 setLoadingCost(false)
                 setFreeDeliveryStatus(free_delivery)
-                let data = [{
-                    id: '',
-                    name: '',
-                    value: '',
-                    service: ''
-                }]
+                let data = []
 
-                result[0].data.rajaongkir.results[0].costs.map((item, index) => {
-                    let item_cost = item.cost[0].value
-                    if (free_delivery) {
-                        item_cost = 0
+                if (!free_delivery && result[0].status == 'ok') {
+                    //alert(1)
+                    result[0].data.rajaongkir.results[0].costs.map((item, index) => {
+                        let item_cost = item.cost[0].value
+                        if (free_delivery) {
+                            item_cost = 0
+                        }
+                        data[index] = {
+                            id: index + '-' + item_cost,
+                            name: `${item.service} Rp. ${item_cost}`,
+                            costs: item_cost,
+                            service: item.service,
+                            baseId: index + '-'
+                        }
+                    })
+                }
+                else if (!free_delivery && result[0].status == 'no') {
+                    // alert(2)
+                    data = []
+                } else {
+                    //alert(3)
+                    data[0] = {
+                        id: 0,
+                        name: 'Free Ongkir',
+                        value: 0,
+                        service: 'Free',
+                        costs: 0,
+                        baseId: 0,
                     }
-                    data[index] = {
-                        id: index + '-' + item_cost,
-                        name: `${item.service} Rp. ${item_cost}`,
-                        costs: item_cost,
-                        service: item.service,
-                        baseId: index + '-'
-                    }
-                })
+                }
                 setCost(data)
                 setDistance(result[1])
             }).catch(e => {
@@ -202,10 +220,16 @@ const Courier = ({ navigation, route }) => {
                     'key': 'b01e82d85217f2a4ed868435055a5084'
                 }
             }).then(res => {
+                res.status = 'ok'
+                console.log('res', res);
                 resolve(res)
             }).catch((e) => {
                 console.log('cost', e.response);
-                reject(e.response)
+                //reject(e.response)
+                let res = {}
+                res.status = 'no'
+                console.log('res', res);
+                resolve(res);
             })
         })
 
@@ -213,7 +237,7 @@ const Courier = ({ navigation, route }) => {
     }
 
     const handleJaringan = () => {
-        // console.log(priceCost)
+        console.log(priceCost)
         //dataJaringan
         let dataJaringan = dataForm;
         dataJaringan.agents_id = dataAgen.id;
@@ -221,12 +245,16 @@ const Courier = ({ navigation, route }) => {
         dataJaringan.ongkir = dataOngkir;
         dataJaringan.cart = packageReducer;
         dataJaringan.activationtype = activationType
-        console.log('dataJaringan',dataJaringan)
+        console.log('dataJaringan', dataJaringan)
         let price = 0;
         let service = ''
         cost.map((item, index) => {
             if (item.id == priceCost) {
-                price = priceCost.replace(item.baseId, '');
+                if (priceCost !== 0) {
+                    price = priceCost.replace(item.baseId, '');
+                } else {
+                    price = 0;
+                }
                 service = item.service
             }
         })
@@ -236,8 +264,8 @@ const Courier = ({ navigation, route }) => {
             costDelivery = 1
         }
         let data = dataOngkir;
-        console.log('data',data)
-        console.log('costDelivery',costDelivery)
+        console.log('data', data)
+        console.log('costDelivery', costDelivery)
         data.cost = parseFloat(price);
         data.courier = dataOngkir.courier != null ? dataOngkir.courier.toUpperCase() : null
         data.delivery_service = service
@@ -303,7 +331,7 @@ const Courier = ({ navigation, route }) => {
         dataActivasi.ongkir = dataOngkir;
         dataActivasi.cart = packageReducer;
         dataActivasi.activationtype = activationType
-        console.log('dataActivasi',dataActivasi)
+        console.log('dataActivasi', dataActivasi)
         let price = 0;
         let service = ''
         cost.map((item, index) => {
@@ -356,7 +384,7 @@ const Courier = ({ navigation, route }) => {
         dataUpgrade.ongkir = dataOngkir;
         dataUpgrade.cart = packageReducer;
         dataUpgrade.activationtype = activationType
-        console.log('dataUpgrade',dataUpgrade)
+        console.log('dataUpgrade', dataUpgrade)
         let price = 0;
         let service = ''
         cost.map((item, index) => {
@@ -458,165 +486,165 @@ const Courier = ({ navigation, route }) => {
         <SafeAreaView style={styles.container}>
             <Header2 title='Layanan Kurir' btn={() => navigation.goBack()} />
             <ScrollView>
-            <View style={{ paddingHorizontal: 20 }}>
-                <View style={{ marginVertical: 10 }} />
-                <Text>Provinsi</Text>
-                <View style={{ marginVertical: 10 }} />
-                <Select2
-                    isSelectSingle
-                    style={{ borderRadius: 5 }}
-                    searchPlaceHolderText='Search Province'
-                    colorTheme={colors.default}
-                    popupTitle="Select Province"
-                    title={userReducer.provinces ? userReducer.provinces.title : "Select Province"}
-                    selectButtonText='select'
-                    cancelButtonText='cancel'
-                    data={provinces}
-                    onSelect={value => {
-                        filterCity(value)
-                        getOngkir('province', value, handleInput('province', value[0]))
-                        setDesti({
-                            ...desti,
-                            province: value
-                        })
-                        setToggleChangeCity(true)
-                    }}
-                    onRemoveItem={value => {
-                        filterCity(value)
-                        getOngkir('province', value, handleInput('province', value[0]))
-                        setDesti({
-                            ...desti,
-                            province: value
-                        })
-                        setToggleChangeCity(true)
-                    }}
-                    style={{ borderColor: colors.default }}
-                />
-                <View style={{ marginVertical: 10 }} />
-                <Text>City</Text>
-                <View style={{ marginVertical: 10 }} />
-                {/* {cities &&  */}
-                <Select2
-                    isSelectSingle
-                    style={{ borderRadius: 5 }}
-                    searchPlaceHolderText='Search City'
-                    colorTheme={colors.default}
-                    popupTitle="Select City"
-                    // title={userReducer.city ?  (!toggleChangeCity? userReducer.city.title : "Select City") : "Select City"}
-                    title={!toggleChangeCity ? (userReducer.city ? userReducer.city.title : 'Select City') : 'Select City'}
-                    selectButtonText='select'
-                    cancelButtonText='cancel'
-                    data={cities ? cities : [{ id: null, name: null }]}
-                    onSelect={data => {
-                        getOngkir('destination', data, handleInput('destination', data[0]))
-                        setDesti({
-                            ...desti,
-                            city: data
-                        })
+                <View style={{ paddingHorizontal: 20 }}>
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>Provinsi</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    <Select2
+                        isSelectSingle
+                        style={{ borderRadius: 5 }}
+                        searchPlaceHolderText='Search Province'
+                        colorTheme={colors.default}
+                        popupTitle="Select Province"
+                        title={userReducer.provinces ? userReducer.provinces.title : "Select Province"}
+                        selectButtonText='select'
+                        cancelButtonText='cancel'
+                        data={provinces}
+                        onSelect={value => {
+                            filterCity(value)
+                            getOngkir('province', value, handleInput('province', value[0]))
+                            setDesti({
+                                ...desti,
+                                province: value
+                            })
+                            setToggleChangeCity(true)
+                        }}
+                        onRemoveItem={value => {
+                            filterCity(value)
+                            getOngkir('province', value, handleInput('province', value[0]))
+                            setDesti({
+                                ...desti,
+                                province: value
+                            })
+                            setToggleChangeCity(true)
+                        }}
+                        style={{ borderColor: colors.default }}
+                    />
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>City</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    {/* {cities &&  */}
+                    <Select2
+                        isSelectSingle
+                        style={{ borderRadius: 5 }}
+                        searchPlaceHolderText='Search City'
+                        colorTheme={colors.default}
+                        popupTitle="Select City"
+                        // title={userReducer.city ?  (!toggleChangeCity? userReducer.city.title : "Select City") : "Select City"}
+                        title={!toggleChangeCity ? (userReducer.city ? userReducer.city.title : 'Select City') : 'Select City'}
+                        selectButtonText='select'
+                        cancelButtonText='cancel'
+                        data={cities ? cities : [{ id: null, name: null }]}
+                        onSelect={data => {
+                            getOngkir('destination', data, handleInput('destination', data[0]))
+                            setDesti({
+                                ...desti,
+                                city: data
+                            })
 
-                    }}
-                    onRemoveItem={data => {
-                        getOngkir('destination', data, handleInput('destination', data[0]))
-                        setDesti({
-                            ...desti,
-                            city: data
-                        })
+                        }}
+                        onRemoveItem={data => {
+                            getOngkir('destination', data, handleInput('destination', data[0]))
+                            setDesti({
+                                ...desti,
+                                city: data
+                            })
 
-                    }}
-                    style={{ borderColor: colors.default }}
-                />
+                        }}
+                        style={{ borderColor: colors.default }}
+                    />
 
-                <View style={{ marginVertical: 10 }} />
-                <Text>Courier</Text>
-                <View style={{ marginVertical: 10 }} />
-                <Select2
-                    isSelectSingle
-                    style={{ borderRadius: 5 }}
-                    colorTheme={colors.default}
-                    searchPlaceHolderText='Pilih Courier'
-                    popupTitle="Pilih Courier"
-                    title="Pilih Courier"
-                    selectButtonText='select'
-                    cancelButtonText='cancel'
-                    data={courier}
-                    onSelect={data => {
-                        getOngkir('courier', data, handleInput('courier', data[0]))
-                        // console.log(data)
-                    }}
-                    onRemoveItem={data => {
-                        getOngkir('courier', data, handleInput('courier', data[0]))
-                    }}
-                    style={{ borderColor: colors.default }}
-                />
-                <View style={{ marginVertical: 10 }} />
-                <Text>Address</Text>
-                <View style={{ marginVertical: 10 }} />
-                <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => getOngkir('address', value, handleInput('address', value))} />
-                <View style={{ marginVertical: 10 }} />
-                <Text>Total berat {dataOngkir.weight} (gram)</Text>
-                <View style={{ marginVertical: 10 }} />
-                <Text>Cost</Text>
-                <View style={{ marginVertical: 10 }} />
-                <Select2
-                    isSelectSingle
-                    style={{ borderRadius: 5 }}
-                    searchPlaceHolderText='Pilih Model Pengiriman'
-                    colorTheme={colors.default}
-                    popupTitle={(loadingCost) ? 'Loading...' : "Pilih Model Pengiriman"}
-                    title={(loadingCost) ? 'Loading...' : "Pilih Model Pengiriman"}
-                    selectButtonText='select'
-                    cancelButtonText='cancel'
-                    data={cost.length > 0 ? cost : [{ id: null, name: 'Tidak ada Layanan' }]}
-                    onSelect={data => {
-                        setPriceCost(data[0])
-                    }}
-                    onRemoveItem={data => {
-                        setPriceCost(data[0])
-                    }}
-                    style={{ borderColor: colors.default }}
-                />
-                <View style={{ marginVertical: 10 }} />
-                {/* <ButtonCustom
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>Courier</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    <Select2
+                        isSelectSingle
+                        style={{ borderRadius: 5 }}
+                        colorTheme={colors.default}
+                        searchPlaceHolderText='Pilih Courier'
+                        popupTitle="Pilih Courier"
+                        title="Pilih Courier"
+                        selectButtonText='select'
+                        cancelButtonText='cancel'
+                        data={courier}
+                        onSelect={data => {
+                            getOngkir('courier', data, handleInput('courier', data[0]))
+                            // console.log(data)
+                        }}
+                        onRemoveItem={data => {
+                            getOngkir('courier', data, handleInput('courier', data[0]))
+                        }}
+                        style={{ borderColor: colors.default }}
+                    />
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>Address</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    <TextInput placeholder='isi alamat anda' value={dataOngkir.address} style={styles.address} onChangeText={(value) => getOngkir('address', value, handleInput('address', value))} />
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>Total berat {dataOngkir.weight} (gram)</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    <Text>Cost</Text>
+                    <View style={{ marginVertical: 10 }} />
+                    <Select2
+                        isSelectSingle
+                        style={{ borderRadius: 5 }}
+                        searchPlaceHolderText='Pilih Model Pengiriman'
+                        colorTheme={colors.default}
+                        popupTitle={(loadingCost) ? 'Loading...' : "Pilih Model Pengiriman"}
+                        title={(loadingCost) ? 'Loading...' : "Pilih Model Pengiriman"}
+                        selectButtonText='select'
+                        cancelButtonText='cancel'
+                        data={cost.length > 0 ? cost : [{ id: null, name: 'Tidak ada Layanan' }]}
+                        onSelect={data => {
+                            setPriceCost(data[0])
+                        }}
+                        onRemoveItem={data => {
+                            setPriceCost(data[0])
+                        }}
+                        style={{ borderColor: colors.default }}
+                    />
+                    <View style={{ marginVertical: 10 }} />
+                    {/* <ButtonCustom
                     // name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
                     name = {typeMenu ? (typeMenu =='Jaringan' ? 'Jaringan' : 'Activasi') : 'Chekout'}
                     width = '100%'
                     color = {colors.btn}
                     func = {typeMenu ? (typeMenu =='Jaringan' ? handleJaringan : handleActivasi) : handleCheckout}
                 /> */}
-                {typeMenu == 'Jaringan' &&
-                    <ButtonCustom
-                        // name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
-                        name='Ragistrasi Downline'
-                        width='100%'
-                        color={colors.btn}
-                        func={handleJaringan}
-                    />
-                }
-                {typeMenu == 'Activasi' &&
-                    <ButtonCustom
-                        name='Activasi'
-                        width='100%'
-                        color={colors.btn}
-                        func={handleActivasi}
-                    />
-                }
-                {typeMenu == 'Checkout' &&
-                    <ButtonCustom
-                        name='Checkout'
-                        width='100%'
-                        color={colors.btn}
-                        func={handleCheckout}
-                    />
-                }
-                {typeMenu == 'Upgrade' &&
-                    <ButtonCustom
-                        name='Upgrade'
-                        width='100%'
-                        color={colors.btn}
-                        func={handleUpgrade}
-                    />
-                }
-            </View>
+                    {typeMenu == 'Jaringan' &&
+                        <ButtonCustom
+                            // name = {typeMenu ? (typeMenu == 'Jaringan' ? 'Jaringan' : 'Checkout') : 'Lanjut'}
+                            name='Ragistrasi Downline'
+                            width='100%'
+                            color={colors.btn}
+                            func={handleJaringan}
+                        />
+                    }
+                    {typeMenu == 'Activasi' &&
+                        <ButtonCustom
+                            name='Activasi'
+                            width='100%'
+                            color={colors.btn}
+                            func={handleActivasi}
+                        />
+                    }
+                    {typeMenu == 'Checkout' &&
+                        <ButtonCustom
+                            name='Checkout'
+                            width='100%'
+                            color={colors.btn}
+                            func={handleCheckout}
+                        />
+                    }
+                    {typeMenu == 'Upgrade' &&
+                        <ButtonCustom
+                            name='Upgrade'
+                            width='100%'
+                            color={colors.btn}
+                            func={handleUpgrade}
+                        />
+                    }
+                </View>
             </ScrollView>
         </SafeAreaView>
     )
